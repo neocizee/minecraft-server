@@ -1,0 +1,52 @@
+version: '3.8'
+services:
+  minecraft_server:
+    # Build la imagen desde el Dockerfile en el mismo contexto
+    build: .
+    container_name: minecraft_prod_server # Nombre para producción
+    restart: unless-stopped
+    # Límites de recursos (Aplicados por Docker/Portainer)
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'      # Máximo 2 núcleos de CPU
+          memory: 4096m    # Máximo 4 GB de RAM (4096 megabytes)
+        reservations: # Opcional: Garantizar un mínimo de recursos
+          cpus: '0.5' # Garantiza 0.5 CPU
+          memory: 1G  # Garantiza 1 GB de RAM
+    
+    # Persistencia de Datos: CRÍTICO para el mundo.
+    # Monta la carpeta 'data' del contenedor a un volumen con nombre.
+    volumes:
+      - minecraft_world:/server # /server es el WORKDIR en el Dockerfile
+
+    # Puertos: EXPOSE SÓLO para la red interna de Docker
+    # NO uses 'ports: - "25565:25565"' si usarás Cloudflare Tunnel,
+    # ya que el túnel se conectará directamente al contenedor.
+    expose:
+      - "25565"
+
+    # Variables de Entorno (si no están en el Dockerfile)
+    environment:
+      # Puedes sobrescribir variables del Dockerfile si las defines aquí
+      # PAPI_MINECRAFT_VERSION: 1.20.1
+      # PAPI_PAPER_BUILD: latest
+      # SERVER_NAME: MyAwesomeServer
+
+    # Conectar a la red de Cloudflare Tunnel
+    networks:
+      - default # Red por defecto de este stack
+      - cloudflare_tunnel_network # Conexión a la red del túnel
+
+# Volúmenes para persistir el mundo de Minecraft
+volumes:
+  minecraft_world:
+    driver: local # Usa el driver local para el volumen
+
+# Redes
+networks:
+  default:
+    driver: bridge
+  cloudflare_tunnel_network:
+    external: true
+    name: YOUR_CLOUDFLARE_TUNNEL_NETWORK_NAME # <--- ¡IMPORTANTE! Nombre de la red del túnel
