@@ -32,8 +32,7 @@ services:
   # SERVICIO 2: PLAYIT.GG TUNNEL (USO DE IMAGEN OFICIAL)
   # ----------------------------------------------------
   playit_agent:
-      # CRÍTICO: Usamos la imagen oficial pre-construida de PlayIt.gg
-      image: playitdev/playit:latest
+      image: playitdev/playit:latest # Usar imagen pre-construida
       container_name: playit_minecraft_tunnel
       restart: unless-stopped
       
