@@ -15,7 +15,7 @@ services:
     restart: unless-stopped
 
     entrypoint: /usr/local/bin/entrypoint.sh
-    command: /bin/bash /usr/local/bin/entrypoint.sh
+    command: ["/bin/bash", "/usr/local/bin/entrypoint.sh"]
     
     deploy:
       resources:
@@ -39,32 +39,28 @@ services:
   # SERVICIO 2: PLAYIT.GG TUNNEL (CONFIGURACIÓN FINAL)
   # ----------------------------------------------------
   playit_agent:
-    # CRÍTICO: Imagen oficial y estable (resuelve fallos de "pull access denied" y MalformedSecret)
+    # CRÍTICO: Usar la imagen oficial para máxima estabilidad
     image: ghcr.io/playit-cloud/playit-agent:latest 
     container_name: playit_minecraft_tunnel
     restart: unless-stopped
     
-    # CRÍTICO: Inyecta la clave SECRETA como variable de entorno
-    environment:
-      # PlayIt.gg busca específicamente esta variable si el archivo no existe.
-      - SECRET_KEY=${PLAYIT_SECRET_KEY} 
+    # ELIMINAR LA SECCIÓN 'build:' (si usaba una imagen local)
     
-    # Esenciales para obtener el código de reclamo la primera vez (si el volumen está vacío)
+    # Esenciales para el claim code/logs
     stdin_open: true
     tty: true
-
-    # DNS fix como buena práctica para estabilidad de red
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
 
     networks:
       - minecraft_tunnel_network
       
-    # CRÍTICO: Volumen para persistir la configuración.
-    # La ruta para esta imagen oficial es /etc/playit
+    # CRÍTICO: Volumen para persistir la configuración (la ruta correcta en la imagen oficial es /etc/playit)
     volumes:
       - playit_config_data:/etc/playit
+      
+    # Opcional: Recomendado si su red local tiene problemas de DNS
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 # ----------------------------------------------------
 # DEFINICIÓN DE VOLÚMENES Y REDES 
 # ----------------------------------------------------
