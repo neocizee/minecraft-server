@@ -21,11 +21,10 @@ services:
           memory: 1G
     
     # Persistencia de Datos: CRÍTICO
-    # Usa la variable de Portainer, mapeada al WORKDIR del contenedor.
     volumes:
-    - type: volume         # Indica que es un volumen con nombre.
-      source: ${WORLD_VOLUME_NAME} # El nombre viene de la variable de Portainer.
-      target: /server        # Montado en el WORKDIR del Dockerfile.
+      # A: Usamos el nombre fijo 'minecraft_data' para pasar la validación
+      - minecraft_data:/server 
+    
     # Variables de Entorno
     environment:
       JAVA_OPTS: "-Xmx${MINECRAFT_MEMORY_LIMIT} -Xms1G" 
@@ -38,10 +37,14 @@ services:
     networks:
       - default 
       - cloudflare_tunnel_network 
-
-# --- SECCIÓN VOLUMES ELIMINADA ---
-# La sección "volumes:" raíz se elimina. Docker Compose/Portainer creará 
-# automáticamente el volumen usando el nombre inyectado por WORLD_VOLUME_NAME.
+  
+volumes:
+  # Define el nombre fijo 'minecraft_data' que se usa en el servicio (Punto A)
+  minecraft_data:
+    # CRÍTICO: Usa la variable de Portainer para forzar el nombre real
+    # Portainer/Docker lo nombrará 'minecraft_prod_world' o 'minecraft_staging_world'
+    name: ${WORLD_VOLUME_NAME}
+    driver: local
 
 # Redes
 networks:
