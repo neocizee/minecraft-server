@@ -28,29 +28,31 @@ services:
       - default 
       - minecraft_tunnel_network 
       
-  # ----------------------------------------------------
-  # SERVICIO 2: PLAYIT.GG TUNNEL (USO DE IMAGEN OFICIAL)
+# ----------------------------------------------------
+  # SERVICIO 2: PLAYIT.GG TUNNEL (USO DE IMAGEN OFICIAL GHCR.IO)
   # ----------------------------------------------------
   playit_agent:
-      image: playitdev/playit:latest # Usar imagen pre-construida
+      # CRÍTICO: Usamos la imagen oficial y recomendada de GitHub Container Registry (GHCR)
+      image: ghcr.io/playit-cloud/playit-agent:latest
       container_name: playit_minecraft_tunnel
       restart: unless-stopped
       
-      # *** ELIMINAMOS LA SECCIÓN 'build:' ***
-
-      # CRÍTICO: Mantenemos el STDIN abierto y TTY para capturar el código de claim
+      # <<<<<< YA NO NECESITAS LA SECCIÓN 'build:' >>>>>>>
+      
+      # Mantenemos STDIN/TTY para el código de claim
       stdin_open: true
       tty: true
   
-      # CRÍTICO: Forzamos DNS públicos para evitar problemas de red
+      # Mantenemos el DNS fix por prevención de fallos de red
       dns:
         - 8.8.8.8
         - 1.1.1.1
 
+      # Conectamos a la red interna
       networks:
         - minecraft_tunnel_network
         
-      # CRÍTICO: Volumen para persistir la configuración (La imagen oficial usa /etc/playit)
+      # CRÍTICO: El volumen para persistir la configuración es /etc/playit en esta imagen
       volumes:
         - playit_config_data:/etc/playit
 # ----------------------------------------------------\
