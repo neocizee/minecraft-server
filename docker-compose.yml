@@ -23,8 +23,9 @@ services:
     # Persistencia de Datos: CRÍTICO
     # Usa la variable de Portainer, mapeada al WORKDIR del contenedor.
     volumes:
-      - ${WORLD_VOLUME_NAME}:/server # Sintaxis correcta: ${Volumen}:/Path/Container
-      
+    - type: volume         # Indica que es un volumen con nombre.
+      source: ${WORLD_VOLUME_NAME} # El nombre viene de la variable de Portainer.
+      target: /server        # Montado en el WORKDIR del Dockerfile.
     # Variables de Entorno
     environment:
       JAVA_OPTS: "-Xmx${MINECRAFT_MEMORY_LIMIT} -Xms1G" 
