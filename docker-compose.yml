@@ -44,39 +44,36 @@ services:
   # NUEVO SERVICIO: PLAYIT.GG TUNNEL
   # ----------------------------------------------------
   playit_agent:
-      image: playit-agent-build:latest
-      container_name: playit_minecraft_tunnel
-      restart: unless-stopped
-      
-      # El build necesita el archivo playit.dockerfile
-      build:
-        context: .
-        dockerfile: playit.dockerfile
-      
-      # CRÍTICO: Mantenemos el STDIN abierto para el claim code y el TTY para compatibilidad
-      stdin_open: true  # <--- Asegúrate que esta línea solo exista AQUÍ
-      tty: true         # <--- Asegúrate que esta línea solo exista AQUÍ
-  
-      # CRÍTICO: Conectamos a la red interna
-      networks:
-        - minecraft_tunnel_network
+        # CRÍTICO: Usamos una imagen oficial o de la comunidad que ya funciona.
+        # Esto elimina la necesidad de tu playit.dockerfile y la lentitud del build.
+        image: playitdev/playit:latest
+        container_name: playit_minecraft_tunnel
+        restart: unless-stopped
         
-      # Volumen para persistir la configuración (clave de playit.gg)
-      volumes:
-        - playit_config_data:/root/.playit
-# Definición de Volúmenes y Redes (Al final del archivo)
+        # <<<<<< HEMOS ELIMINADO LA SECCIÓN 'build:' >>>>>>>
+        
+        # CRÍTICO: Mantenemos el STDIN abierto y TTY para capturar el código de claim
+        stdin_open: true
+        tty: true
+    
+        # CRÍTICO: Conectamos a la misma red para que pueda encontrar el servidor
+        networks:
+          - minecraft_tunnel_network
+          
+        # Volumen para persistir la configuración (la clave de playit.gg)
+        volumes:
+          # El path cambia a /etc/playit en esta imagen en lugar de /root/.playit
+          - playit_config_data:/etc/playit
+
+# Definición de Redes y Volúmenes (al final del archivo)
 volumes:
-  minecraft_data:
-    name: ${WORLD_VOLUME_NAME}
-    driver: local
-  # CRÍTICO: Nuevo volumen para persistir la configuración de playit (token y túneles)
+  # ... (Volumen de minecraft_data) ...
   playit_config_data:
     name: playit_config
     driver: local
 
 networks:
-  default:
-    driver: bridge
+  # ... (default network) ...
   minecraft_tunnel_network: 
     name: minecraft_tunnel_network 
     driver: bridge
