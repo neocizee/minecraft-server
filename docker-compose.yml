@@ -1,76 +1,38 @@
 version: '3.8'
 services:
+  # ... (Servicio minecraft_server sin cambios) ...
+  
   # ----------------------------------------------------
-  # SERVICIO 1: MINECRAFT SERVER (Tu configuración estable)
-  # ----------------------------------------------------
-  minecraft_server:
-    build: 
-      context: . 
-      args: 
-        SERVER_ENV: ${SERVER_ENV:-prod} 
-        CACHE_BUST: ${BUILD_ID:-7} # <<-- CAMBIA este número (8, 9, etc.) si haces cambios en tu Dockerfile
-        
-    container_name: ${CONTAINER_NAME:-mc-server}
-    restart: unless-stopped
-    command: /usr/local/bin/entrypoint.sh 
-
-    deploy:
-      resources:
-        limits:
-          cpus: '2.0'
-          memory: 4096m 
-        reservations:
-          cpus: '0.5'
-          memory: 1G
-    
-    volumes:
-      - minecraft_data:/data 
-    
-    environment:
-      JAVA_OPTS: "-Xmx${MINECRAFT_MEMORY_LIMIT:-3G} -Xms1G" 
-      EULA: "TRUE"
-      JAVA_OPTS_GC: "-XX:+AlwaysPreTouch -XX:+DisableExplicitGC -XX:+ParallelRefProcEnabled -XX:+PerfDisableSharedMem -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1HeapRegionSize=8M -XX:G1HeapWastePercent=5 -XX:G1MaxNewSizePercent=40 -XX:G1MixedGCCountTarget=4 -XX:G1NewSizePercent=30 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:G1ReservePercent=20 -XX:InitiatingHeapOccupancyPercent=15 -XX:MaxGCPauseMillis=200 -XX:MaxTenuringThreshold=1 -XX:SurvivorRatio=32"
-          
-    expose:
-      - "25565" 
-
-    networks:
-      - default 
-      - minecraft_tunnel_network 
-      
-  # ----------------------------------------------------
-  # SERVICIO 2: PLAYIT.GG TUNNEL (Imagen GHCR.IO - Alternativa)
+  # SERVICIO 2: PLAYIT.GG TUNNEL (BUILD LOCAL ESTABLE)
   # ----------------------------------------------------
   playit_agent:
-      # CRÍTICO: Usamos la imagen estable de GHCR.io para evitar el error de acceso denegado.
-      image: ghcr.io/playit-cloud/playit:latest
+      image: playit-agent-build:latest # Nombre de la imagen que se creará
       container_name: playit_minecraft_tunnel
       restart: unless-stopped
       
+      # CRÍTICO: Usamos el build local que ahora es estable
+      build:
+        context: .
+        dockerfile: playit.dockerfile # Usa el nuevo Dockerfile estable
+      
+      # Esenciales para obtener el código de claim
       stdin_open: true
       tty: true
   
       networks:
         - minecraft_tunnel_network
         
-      # Volumen para persistir la configuración (Playit.gg usa /root/.playit)
+      # Volumen para persistir la configuración
       volumes:
+        # Nota: El agente PlayIt.gg usa ~/.playit (que se mapea a /root/.playit en Alpine)
         - playit_config_data:/root/.playit 
 
-# ----------------------------------------------------
-# DEFINICIÓN DE VOLÚMENES Y REDES 
-# ----------------------------------------------------
+# Definición de Volúmenes y Redes (Al final del archivo)
 volumes:
-  minecraft_data:
-    name: ${WORLD_VOLUME_NAME:-mc-world-data}
-    driver: local
+  # ... (Volumen de minecraft_data) ...
   playit_config_data:
     name: playit_config
     driver: local
 
 networks:
-  default:
-    driver: bridge
-  minecraft_tunnel_network: 
-    name: minecraft_tunnel_network 
-    driver: bridge
+  # ... (Redes sin cambios) ...
