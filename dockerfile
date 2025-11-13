@@ -1,33 +1,42 @@
-# Base estable y ligera (Alpine con Java 17)
-FROM eclipse-temurin:17-jre-alpine
+# ETAPA 1: BUILDER (Descarga y configuración de archivos)
+FROM eclipse-temurin:17-jre-alpine AS builder
 
-# CRÍTICO: Instalar CURL y CA-CERTIFICATES
+# Instalar CURL y CA-CERTIFICATES (Necesario en Alpine para HTTPS)
 RUN apk update && \
     apk add --no-cache curl ca-certificates && \
     rm -rf /var/cache/apk/*
 
-# CRÍTICO: Se fija un build específico para estabilidad (ej: el build 299)
-ARG MINECRAFT_VERSION="1.20.1"
-ARG PAPER_BUILD="299" 
-# NOTA: Debes verificar el build más reciente y estable en el sitio de PaperMC.
-
 WORKDIR /server
 
-# CRÍTICO: Usar la URL con las variables ARG fijas
-RUN curl -fL -o paper.jar "https://api.papermc.io/v2/projects/paper/versions/${MINECRAFT_VERSION}/builds/${PAPER_BUILD}/downloads/paper-${MINECRAFT_VERSION}-${PAPER_BUILD}.jar"
+# CRÍTICO: Usar URL FIJA para un build estable (ej: Build 299 de 1.20.1)
+# Esto elimina el fallo de concatenación y el error 'exit code 22'.
+RUN curl -fL -o paper.jar "https://api.papermc.io/v2/projects/paper/versions/1.20.1/builds/299/downloads/paper-1.20.1-299.jar"
 
+# Archivos de configuración
 RUN echo "eula=true" > eula.txt
 
-EXPOSE 25565
-
-# --- Lógica de Entorno (Se mantiene) ---
+# --- Lógica de Entorno ---
 ARG SERVER_ENV
 COPY server.properties.${SERVER_ENV} /server/server.properties
 RUN mkdir -p /server/plugins
 COPY plugins /server/plugins
+
 RUN if [ "$SERVER_ENV" = "staging" ]; then \
       cp -r plugins.staging/. /server/plugins; \
     fi
 
-# CMD base (Sobreescrito por docker-compose para RAM)
+# ETAPA 2: FINAL (Imagen de ejecución mínima - GOOD PRACTICE)
+FROM eclipse-temurin:17-jre-alpine
+
+WORKDIR /server
+
+# Copiar solo los artefactos necesarios de la etapa builder
+COPY --from=builder /server/paper.jar /server/paper.jar
+COPY --from=builder /server/server.properties /server/server.properties
+COPY --from=builder /server/eula.txt /server/eula.txt
+COPY --from=builder /server/plugins /server/plugins
+
+EXPOSE 25565
+
+# CMD base (Será anulado por docker-compose para fijar la RAM)
 CMD ["java", "-jar", "paper.jar", "nogui"]
