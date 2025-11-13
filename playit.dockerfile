@@ -1,30 +1,16 @@
-# Usamos Ubuntu 22.04 LTS (Jammy), la base más compatible con el PPA.
-FROM ubuntu:jammy 
+# Usamos una imagen base mínima con las herramientas necesarias.
+# Alpine es ideal: pequeña y estable.
+FROM alpine:3.18
 
-# Paso 1: Instalar dependencias esenciales y limpiar.
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    curl \
-    gnupg2 \
-    coreutils && \
-    rm -rf /var/lib/apt/lists/*
+# Instalar CURL para descargar el binario
+RUN apk update && \
+    apk add --no-cache curl && \
+    rm -rf /var/cache/apk/*
 
-# CRÍTICO: Paso 2: Configurar el repositorio de PlayIt.gg de forma MANUAL y ATÓMICA.
-# Este método es el más estable y evita el inestable comando 'add-apt-repository'.
+# CRÍTICO: Descarga el binario estático de PlayIt.gg para Linux x86_64 directamente.
+# Esto evita por completo el gestor de paquetes APT y los repositorios inestables.
+RUN curl -fL -o /usr/bin/playit https://playit.cloud/api/v1/agent/downloads/playit-linux-x86_64 && \
+    chmod +x /usr/bin/playit
 
-# A. Descargar la llave GPG, convertirla a formato DEARMOR y guardarla directamente.
-# Usamos un comando de tubería simple, guardando la salida en un archivo dedicado en el directorio de keyrings.
-RUN curl -SsL https://playit-cloud.github.io/ppa/key.gpg | gpg --dearmor -o /usr/share/keyrings/playit-cloud.gpg
-
-# B. Crear el archivo de lista de fuentes (.list) referenciando el nuevo archivo de llave GPG.
-# Este archivo le dice a apt-get dónde encontrar los paquetes y cómo verificar su firma.
-RUN echo "deb [signed-by=/usr/share/keyrings/playit-cloud.gpg] https://playit-cloud.github.io/ppa/data ./" > /etc/apt/sources.list.d/playit-cloud.list
-
-# Paso 3: Instalar el agente de PlayIt.
-# Hacemos un último update y luego instalamos.
-RUN apt-get update && \
-    apt-get install -y playit && \
-    rm -rf /var/lib/apt/lists/*
-
-# CRÍTICO: ENTRYPOINT con fix de logs (stdbuf)
+# CRÍTICO: El ENTRYPOINT fuerza la impresión inmediata de logs (para ver el código de claim)
 ENTRYPOINT ["stdbuf", "-o", "L", "/usr/bin/playit"]
