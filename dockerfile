@@ -28,4 +28,4 @@ RUN if [ "$SERVER_ENV" = "staging" ]; then \
     fi
 
 # SOLUCIÓN RAM: Incluir la variable $JAVA_OPTS para pasar la configuración de RAM desde docker-compose.
-CMD ["java", "$JAVA_OPTS", "-jar", "paper.jar", "nogui"]
+CMD ["java", "-jar", "paper.jar", "nogui"]
