@@ -35,33 +35,35 @@ services:
       - minecraft_tunnel_network 
       
   # ----------------------------------------------------
-  # SERVICIO 2: PLAYIT.GG TUNNEL (CONFIGURACIÓN ESTABLE CON FIX)
+  # SERVICIO 2: PLAYIT.GG TUNNEL (CONFIGURACIÓN ESTABLE)
   # ----------------------------------------------------
   playit_agent:
-      image: playit-agent-build:latest
-      container_name: playit_minecraft_tunnel
-      restart: unless-stopped
+    # CRÍTICO: Usamos la imagen oficial y preconstruida. Esto elimina la necesidad de 'build:'.
+    image: ghcr.io/playit-cloud/playit-agent:latest
+    container_name: playit_minecraft_tunnel
+    restart: unless-stopped
+    
+    # IMPORTANTE: ELIMINAR LA SECCIÓN 'build:' (si existe)
+
+    # El comando por defecto es suficiente para iniciar en modo interactivo
+    command: ["/usr/bin/playit"] 
+    
+    # Esenciales para obtener el código de reclamo en los logs
+    stdin_open: true
+    tty: true
+
+    # DNS fix como buena práctica general (opcional, pero recomendado)
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+
+    networks:
+      - minecraft_tunnel_network
       
-      # Usamos el build local que descarga el binario en tiempo de build (playit.dockerfile)
-      build:
-        context: .
-        dockerfile: playit.dockerfile
-      
-      # CRÍTICO: Forzar DNS públicos para estabilidad (aunque el build es el fix principal)
-      dns:
-        - 8.8.8.8
-        - 1.1.1.1
-      
-      # Esenciales para obtener el código de claim
-      stdin_open: true
-      tty: true
-      
-      networks:
-        - minecraft_tunnel_network
-        
-      # Mapea a /app, que es el WORKDIR donde PlayIt guarda su configuración
-      volumes:
-        - playit_config_data:/app
+    # CRÍTICO: Volumen para persistir la configuración.
+    # La ruta correcta para esta imagen oficial es /etc/playit
+    volumes:
+      - playit_config_data:/etc/playit
 
 # ----------------------------------------------------
 # DEFINICIÓN DE VOLÚMENES Y REDES 
@@ -76,5 +78,4 @@ volumes:
 
 networks:
   minecraft_tunnel_network:
-    name: ${TUNNEL_NETWORK_NAME:-mc-tunnel-net}
-    driver: bridge
+    name: mc-tunnel-net
