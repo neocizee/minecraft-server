@@ -1,5 +1,9 @@
-FROM eclipse-temurin:17-jre-alpine
+FROM alpine:3.18 
 
+# 2. Instala OpenJDK 17-JRE (Java Runtime Environment) en el contenedor
+RUN apk update && \
+    apk add --no-cache openjdk17-jre && \
+    rm -rf /var/cache/apk/*
 ARG MINECRAFT_VERSION="1.20.1"
 ARG PAPER_BUILD="latest"
 
