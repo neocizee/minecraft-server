@@ -1,31 +1,30 @@
 # Usa la imagen base oficial de Java (Java 17 es común para Minecraft 1.18+)
 FROM eclipse-temurin:17-jre-alpine
 
-# Argumentos para la versión de Minecraft
-ARG MINECRAFT_VERSION="1.20.1"
-ARG PAPER_BUILD="latest" # "latest" o un número específico
+ARG MINECRAFT_VERSION="1.20.1" # Por defecto, puedes cambiarlo al construir
+ARG PAPER_BUILD="latest"
 
-# Establece el directorio de trabajo dentro del contenedor
 WORKDIR /server
 
-# Descarga PaperMC
-# Puedes obtener el link de descarga desde https://papermc.io/downloads/paper
-# Ejemplo para 1.20.1
 RUN wget -O paper.jar https://api.papermc.io/v2/projects/paper/versions/${MINECRAFT_VERSION}/builds/${PAPER_BUILD}/downloads/paper-${MINECRAFT_VERSION}-${PAPER_BUILD}.jar
-
-# Aceptar el EULA (End User License Agreement)
-# ¡CRÍTICO! Necesario para que el servidor inicie.
 RUN echo "eula=true" > eula.txt
 
-# Copiar server.properties si lo tienes
-COPY server.properties .
-
-# Copiar la carpeta de plugins si existe
-COPY plugins ./plugins
-
-# Exponer el puerto por defecto de Minecraft
 EXPOSE 25565
 
-# Comando para iniciar el servidor Paper
-# Ajusta la RAM máxima y mínima (-Xmx/-Xms) aquí.
+# Argumento para diferenciar el entorno (Pasado desde docker-compose o Portainer)
+ARG SERVER_ENV
+
+# Copia de configuraciones
+# Copia el server.properties específico según el ARG
+COPY server.properties.${SERVER_ENV} /server/server.properties
+
+# Copia los plugins comunes
+COPY plugins /server/plugins
+
+# Copia plugins de Staging SOLO si estamos en Staging
+RUN if [ "$SERVER_ENV" = "staging" ]; then \
+      cp -r plugins.staging/. /server/plugins; \
+    fi
+
+# El CMD no carga server.properties, lo hará el docker-compose
 CMD ["java", "-Xmx4G", "-Xms1G", "-jar", "paper.jar", "nogui"]

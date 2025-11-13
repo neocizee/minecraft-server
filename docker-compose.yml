@@ -36,7 +36,7 @@ services:
     # Conectar a la red de Cloudflare Tunnel
     networks:
       - default # Red por defecto de este stack
-      - cloudflare_tunnel_network # Conexión a la red del túnel
+      # - cloudflare_tunnel_network # Conexión a la red del túnel
 
 # Volúmenes para persistir el mundo de Minecraft
 volumes:
@@ -49,4 +49,4 @@ networks:
     driver: bridge
   cloudflare_tunnel_network:
     external: true
-    name: YOUR_CLOUDFLARE_TUNNEL_NETWORK_NAME # <--- ¡IMPORTANTE! Nombre de la red del túnel
+    # name: YOUR_CLOUDFLARE_TUNNEL_NETWORK_NAME # <--- ¡IMPORTANTE! Nombre de la red del túnel

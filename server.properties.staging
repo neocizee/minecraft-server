@@ -1,0 +1,31 @@
+# Minecraft server properties - Staging Environment
+# For testing new plugins, configs, and features.
+
+# Server Basics
+motd=Staging Minecraft Server
+max-players=10
+server-port=25566
+
+# Gameplay
+gamemode=survival
+difficulty=hard
+pvp=false
+allow-flight=true
+enable-command-block=true
+
+# World
+level-seed=
+level-name=world_staging
+allow-nether=true
+generate-structures=true
+
+# Security & Users
+white-list=false
+enforce-whitelist=false
+online-mode=true
+
+# Advanced
+rcon.port=25576
+query.port=25566
+enable-query=true
+enable-rcon=false
