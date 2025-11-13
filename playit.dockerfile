@@ -2,7 +2,6 @@
 FROM debian:stable
 
 # Instalación atómica: Actualiza e instala todas las dependencias y playit.gg en un solo comando
-# El uso de && \ garantiza que si falla un paso, todo el RUN falle inmediatamente.
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     curl \
@@ -14,5 +13,5 @@ RUN apt-get update && \
     apt-get install -y playit && \
     rm -rf /var/lib/apt/lists/*
 
-# CRÍTICO: El ENTRYPOINT fuerza la impresión inmediata de logs
+# CRÍTICO: El ENTRYPOINT usa stdbuf para forzar la impresión inmediata de logs (soluciona el problema de claim code)
 ENTRYPOINT ["stdbuf", "-o", "L", "/usr/bin/playit"]
