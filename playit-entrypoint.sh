@@ -1,20 +1,21 @@
 #!/bin/sh
 set -e
 
-# Define la ruta del binario DENTRO del volumen persistente
 PLAYIT_BIN="/app/playit"
 
-# Si el binario de playit NO existe en el volumen...
+# CRÍTICO: Lee la URL de la variable de entorno ($PLAYIT_URL)
+# Si la variable no está definida, usa la URL de fallback (pero el compose la definirá)
+DOWNLOAD_URL=${PLAYIT_URL:-"httpsWAR:URL_NO_DEFINIDA"}
+
 if [ ! -f "$PLAYIT_BIN" ]; then
-    echo "PlayIt binary not found, downloading (con DNS público y URL corregida)..."
+    echo "PlayIt binary not found, downloading from: $DOWNLOAD_URL"
     
-    # CRÍTICO: Usar la URL de descarga correcta
-    curl -fL -o "$PLAYIT_BIN" https://playit.cloud/api/v1/agent/downloads/playit-linux-x86_64
+    # Usa la variable para la descarga
+    curl -fL -o "$PLAYIT_BIN" "$DOWNLOAD_URL"
     
     chmod +x "$PLAYIT_BIN"
     echo "Download complete."
 fi
 
 echo "Starting PlayIt agent..."
-# Ejecuta el binario usando stdbuf para forzar la salida de logs (el código de claim)
 exec stdbuf -o L "$PLAYIT_BIN"
