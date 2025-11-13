@@ -3,14 +3,14 @@ services:
   minecraft_server:
     # Build la imagen
     build: 
-      context: . # Busca 'dockerfile' en la raíz del contexto
+      context: . 
       args: 
-        SERVER_ENV: ${SERVER_ENV} 
+        SERVER_ENV: ${SERVER_ENV} # Pasa la variable de entorno (prod/staging) al Dockerfile
         
-    container_name: ${CONTAINER_NAME}
+    container_name: ${CONTAINER_NAME} # Nombre único por entorno
     restart: unless-stopped
 
-    # Límites de recursos (GOOD PRACTICE)
+    # Límites de recursos (BUENA PRÁCTICA)
     deploy:
       resources:
         limits:
@@ -20,33 +20,32 @@ services:
           cpus: '0.5'
           memory: 1G
     
-    # Persistencia de Datos (FIX DE VOLUMEN)
+    # Persistencia de Datos: CRÍTICO
     volumes:
+      # Mapea el volumen nombrado al WORKDIR del contenedor
       - minecraft_data:/server 
     
-    # Variables de Entorno
+    # Variables de Entorno (JAVA_OPTS es la variable de RAM usada en el Dockerfile)
     environment:
-      JAVA_OPTS: "-Xmx${MINECRAFT_MEMORY_LIMIT} -Xms1G" 
+      JAVA_OPTS: "-Xmx${MINECRAFT_MEMORY_LIMIT} -Xms1G" # Usa la variable de Portainer para el límite
       EULA: "TRUE"
 
     expose:
       - "25565"
 
-    # Conectar a la red de Cloudflare Tunnel
+    # Conectar a la red de Cloudflare Tunnel (Usaremos esto más adelante)
     networks:
       - default 
       - cloudflare_tunnel_network 
   
-# Definición de Volúmenes (FIX DE VOLUMEN)
+# Definición de Volúmenes y Redes
 volumes:
   minecraft_data: 
-    name: ${WORLD_VOLUME_NAME}
+    name: ${WORLD_VOLUME_NAME} # Nombre único por entorno (mc_prod_data/mc_staging_data)
     driver: local
 
-# Redes
 networks:
   default:
     driver: bridge
-  cloudflare_tunnel_network:
+  cloudflare_tunnel_network: # Necesaria para la conectividad del túnel
     external: true
-    name: YOUR_CLOUDFLARE_TUNNEL_NETWORK_NAME
