@@ -29,30 +29,29 @@ services:
       - minecraft_tunnel_network 
       
   # ----------------------------------------------------
-  # SERVICIO 2: PLAYIT.GG TUNNEL (CON DNS FIX)
+  # SERVICIO 2: PLAYIT.GG TUNNEL (CON DNS FIX Y ENV VAR)
   # ----------------------------------------------------
   playit_agent:
       image: playit-agent-build:latest
       container_name: playit_minecraft_tunnel
       restart: unless-stopped
-      
       build:
         context: .
-        dockerfile: playit.dockerfile # Usa el Dockerfile mínimo de Alpine
+        dockerfile: playit.dockerfile
       
       # CRÍTICO: FORZAR DNS PÚBLICO
-      # Esto obliga al contenedor a usar DNS fiables (8.8.8.8)
-      dns:
-        - 8.8.8.8
-        - 1.1.1.1
+      dns: [ "8.8.8.8", "1.1.1.1" ]
       
       entrypoint: /usr/local/bin/playit-entrypoint.sh
+      
+      # CRÍTICO: Definimos la URL de descarga como variable de entorno
+      environment:
+        - PLAYIT_URL=https://playit.cloud/api/v1/agent/downloads/playit-linux-x86_64
       
       stdin_open: true
       tty: true
       networks:
         - minecraft_tunnel_network
-        
       volumes:
         - playit_config_data:/app
 # ----------------------------------------------------
