@@ -28,34 +28,32 @@ services:
       - default 
       - minecraft_tunnel_network 
       
-  # ----------------------------------------------------\
-  # SERVICIO 2: PLAYIT.GG TUNNEL (CON MÉTODO APT ESTABLE)\
-  # ----------------------------------------------------\
+  # ----------------------------------------------------
+  # SERVICIO 2: PLAYIT.GG TUNNEL (USO DE IMAGEN OFICIAL)
+  # ----------------------------------------------------
   playit_agent:
-      image: playit-agent-build:latest
+      # CRÍTICO: Usamos la imagen oficial pre-construida de PlayIt.gg
+      image: playitdev/playit:latest
       container_name: playit_minecraft_tunnel
       restart: unless-stopped
       
-      build:
-        context: .
-        dockerfile: playit.dockerfile # Usa el nuevo Dockerfile con Debian/APT
-      
-      # CRÍTICO: Forzamos DNS públicos para evitar problemas de resolución de PlayIt.cloud
-      dns:
-        - 8.8.8.8
-        - 1.1.1.1
-      
-      # Se mantiene 'stdin_open' y 'tty' para obtener el código de claim
+      # *** ELIMINAMOS LA SECCIÓN 'build:' ***
+
+      # CRÍTICO: Mantenemos el STDIN abierto y TTY para capturar el código de claim
       stdin_open: true
       tty: true
   
+      # CRÍTICO: Forzamos DNS públicos para evitar problemas de red
+      dns:
+        - 8.8.8.8
+        - 1.1.1.1
+
       networks:
         - minecraft_tunnel_network
         
-      # CRÍTICO: Volumen mapeado a la ubicación de configuración en Debian
+      # CRÍTICO: Volumen para persistir la configuración (La imagen oficial usa /etc/playit)
       volumes:
-        - playit_config_data:/root/.playit
-
+        - playit_config_data:/etc/playit
 # ----------------------------------------------------\
 # DEFINICIÓN DE VOLÚMENES Y REDES 
 # ----------------------------------------------------\
