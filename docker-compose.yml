@@ -42,20 +42,26 @@ services:
   # SERVICIO 2: PLAYIT.GG TUNNEL (Imagen GHCR.IO - Alternativa)
   # ----------------------------------------------------
   playit_agent:
-      # CRÍTICO: Usamos la imagen estable de GHCR.io para evitar el error de acceso denegado.
-      image: ghcr.io/playit-cloud/playit:latest
+      image: playit-agent-build:latest # Nombre de la imagen que se creará
       container_name: playit_minecraft_tunnel
       restart: unless-stopped
       
+      # CRÍTICO: Usamos el build local que ahora es estable
+      build:
+        context: .
+        dockerfile: playit.dockerfile # Usa el nuevo Dockerfile estable
+      
+      # Esenciales para obtener el código de claim
       stdin_open: true
       tty: true
   
       networks:
         - minecraft_tunnel_network
         
-      # Volumen para persistir la configuración (Playit.gg usa /root/.playit)
+      # Volumen para persistir la configuración
       volumes:
-        - playit_config_data:/root/.playit 
+        # Nota: El agente PlayIt.gg usa ~/.playit (que se mapea a /root/.playit en Alpine)
+        - playit_config_data:/root/.playit
 
 # ----------------------------------------------------
 # DEFINICIÓN DE VOLÚMENES Y REDES 
