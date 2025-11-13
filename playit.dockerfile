@@ -1,16 +1,18 @@
-# Usamos una imagen base mínima con las herramientas necesarias.
-# Alpine es ideal: pequeña y estable.
+# Usamos Alpine. Es rápido y estable.
 FROM alpine:3.18
 
-# Instalar CURL para descargar el binario
+# Instala solo las herramientas necesarias para el script de entrypoint.
+# Esto se ejecuta en build-time, pero es una dependencia estable.
 RUN apk update && \
-    apk add --no-cache curl && \
+    apk add --no-cache curl coreutils && \
     rm -rf /var/cache/apk/*
 
-# CRÍTICO: Descarga el binario estático de PlayIt.gg para Linux x86_64 directamente.
-# Esto evita por completo el gestor de paquetes APT y los repositorios inestables.
-RUN curl -fL -o /usr/bin/playit https://playit.cloud/api/v1/agent/downloads/playit-linux-x86_64 && \
-    chmod +x /usr/bin/playit
+# Copia el nuevo script de entrada que descargará el binario
+COPY playit-entrypoint.sh /usr/local/bin/playit-entrypoint.sh
+RUN chmod +x /usr/local/bin/playit-entrypoint.sh
 
-# CRÍTICO: El ENTRYPOINT fuerza la impresión inmediata de logs (para ver el código de claim)
-ENTRYPOINT ["stdbuf", "-o", "L", "/usr/bin/playit"]
+# Define un directorio de trabajo
+WORKDIR /app
+
+# El entrypoint se encargará de todo
+ENTRYPOINT ["/usr/local/bin/playit-entrypoint.sh"]
