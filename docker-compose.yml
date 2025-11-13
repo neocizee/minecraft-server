@@ -69,5 +69,12 @@ volumes:
     name: ${WORLD_VOLUME_NAME:-mc-world-data}
     driver: local
   playit_config_data:
-    name: playit-config # <-- Nombre del volumen a eliminar
+    name: playit-config
     driver: local
+
+networks:
+  default:
+    driver: bridge
+  minecraft_tunnel_network:
+    driver: bridge
+    internal: true
