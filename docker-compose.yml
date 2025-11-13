@@ -9,24 +9,26 @@ services:
       dockerfile: dockerfile 
       args: 
         SERVER_ENV: ${SERVER_ENV:-prod} 
-        CACHE_BUST: ${BUILD_ID:-11} # <<-- ¡CAMBIA ESTE NÚMERO! (e.g., a 11)
+        # CRÍTICO: Cambia este número (e.g., 12) si modificas el dockerfile de Minecraft.
+        CACHE_BUST: ${BUILD_ID:-12} 
     container_name: ${CONTAINER_NAME:-mc-server}
     restart: unless-stopped
-    command: /usr/local/bin/entrypoint.sh 
+    command: /usr/local/bin/entrypoint.sh # Ejecuta el script de validación
     deploy:
       resources:
         limits: { cpus: '2.0', memory: 4096m }
         reservations: { cpus: '0.5', memory: 1G }
     volumes:
-      - minecraft_data:/data 
+      - minecraft_data:/data # /data es donde el entrypoint.sh lee/escribe los archivos
     environment:
       JAVA_OPTS: "-Xmx${MINECRAFT_MEMORY_LIMIT:-3G} -Xms1G" 
       EULA: "TRUE"
+      # Flags de optimización G1GC
       JAVA_OPTS_GC: "-XX:+AlwaysPreTouch -XX:+DisableExplicitGC -XX:+ParallelRefProcEnabled -XX:+PerfDisableSharedMem -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1HeapRegionSize=8M -XX:G1HeapWastePercent=5 -XX:G1MaxNewSizePercent=40 -XX:G1MixedGCCountTarget=4 -XX:G1NewSizePercent=30 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:G1ReservePercent=20 -XX:InitiatingHeapOccupancyPercent=15 -XX:MaxGCPauseMillis=200 -XX:MaxTenuringThreshold=1 -XX:SurvivorRatio=32"
     expose: [ "25565" ]
     networks:
       - default 
-      - minecraft_tunnel_network 
+      - minecraft_tunnel_network # Conecta a la red del túnel
       
   # ----------------------------------------------------
   # SERVICIO 2: PLAYIT.GG TUNNEL (CONFIGURACIÓN ESTABLE)
@@ -36,45 +38,38 @@ services:
       container_name: playit_minecraft_tunnel
       restart: unless-stopped
       
-      # Usamos el build local (Dockerfile y script que descarga el binario)
       build:
         context: .
-        dockerfile: playit.dockerfile # Tu Dockerfile basado en Alpine
+        dockerfile: playit.dockerfile # Usa el Dockerfile de Alpine que descarga el binario
       
-      # CRÍTICO: Forzar DNS públicos (Buena práctica para evitar fallos de red)
+      # CRÍTICO: Forzar DNS para estabilidad de red (necesario para la descarga inicial del binario)
       dns:
         - 8.8.8.8
         - 1.1.1.1
       
-      # Usa tu script de entrada que gestiona la descarga y ejecución
-      entrypoint: /usr/local/bin/playit-entrypoint.sh
+      entrypoint: /usr/local/bin/playit-entrypoint.sh # Usa el script que gestiona la descarga y ejecución
       
-      # Esenciales para obtener el código de claim
-      stdin_open: true
-      tty: true
+      stdin_open: true # Permite la entrada de datos si es necesaria
+      tty: true        # Esenciales para ver el código de claim en los logs
       
       networks:
         - minecraft_tunnel_network
         
-      # CRÍTICO: Mapea a /app, que es el WORKDIR de tu Dockerfile y donde playit guarda la config
+      # CRÍTICO: Volumen persistente. PlayIt guardará el binario y el secreto en /app.
       volumes:
         - playit_config_data:/app
-
-      
-# ----------------------------------------------------\
-# DEFINICIÓN DE VOLÚMENES Y REDES 
-# ----------------------------------------------------\
+        
+# ----------------------------------------------------
+# DEFINICIÓN DE VOLÚMENES Y REDES (¡Solución de error de red!)
+# ----------------------------------------------------
 volumes:
   minecraft_data:
     name: ${WORLD_VOLUME_NAME:-mc-world-data}
     driver: local
   playit_config_data:
-    name: playit-config
+    name: playit-config # Nombre clave para la eliminación forzada
     driver: local
 
 networks:
-  default:
+  minecraft_tunnel_network: # ¡La red que faltaba!
     driver: bridge
-  minecraft_tunnel_network:
-    driver: bridge
-    internal: true
