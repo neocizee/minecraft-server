@@ -36,7 +36,7 @@ services:
     # Conectar a la red de Cloudflare Tunnel (Usaremos esto más adelante)
     networks:
       - default 
-      - cloudflare_tunnel_network 
+      - minecraft_tunnel_network # Nuevo nombre de red
   
 # Definición de Volúmenes y Redes
 volumes:
@@ -44,10 +44,10 @@ volumes:
     name: ${WORLD_VOLUME_NAME}
     driver: local
 
+# Redes (Este stack crea la red si no existe)
 networks:
   default:
     driver: bridge
-  cloudflare_tunnel_network:
-    name: cloudflare_tunnel_network
+  minecraft_tunnel_network: # La red que ahora crea este stack
+    name: minecraft_tunnel_network 
     driver: bridge
-    #external: true
