@@ -19,8 +19,6 @@ eula.txt
 # Crash reports
 crash-reports/
 
-# Plugin data
-plugins/
 
 # Temporary or build files
 *.tmp
