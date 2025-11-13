@@ -8,14 +8,14 @@ services:
       context: . 
       dockerfile: dockerfile 
       args: 
-        SERVER_ENV: ${SERVER_ENV:-prod} 
+        SERVER_ENV: ${SERVER_ENV:-main} 
         CACHE_BUST: ${BUILD_ID:-13}
         
     container_name: ${CONTAINER_NAME:-mc-server}
     restart: unless-stopped
 
     entrypoint: /usr/local/bin/entrypoint.sh
-    command: java $JAVA_OPTS $JAVA_OPTS_GC -jar /data/paper.jar nogui
+    command: /bin/bash /usr/local/bin/entrypoint.sh
     
     deploy:
       resources:
