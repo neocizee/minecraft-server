@@ -75,17 +75,17 @@ services:
       #    (solo por única vez).
       stdin_open: true  # Mantener abierto el STDIN para el claim code
       tty: true
-      
-# Definición de Volúmenes (Se añaden los datos de Playit)
+
+# Definición de Volúmenes y Redes (Al final del archivo)
 volumes:
-  minecraft_data: 
+  minecraft_data:
     name: ${WORLD_VOLUME_NAME}
     driver: local
-  playit_data: # Nuevo volumen para playit.toml
-    name: playit_data
+  # CRÍTICO: Nuevo volumen para persistir la configuración de playit (token y túneles)
+  playit_config_data:
+    name: playit_config
     driver: local
 
-# Redes
 networks:
   default:
     driver: bridge
