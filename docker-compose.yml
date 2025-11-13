@@ -65,7 +65,10 @@ services:
       # 4. CRÍTICO: Conectamos a la red interna.
       networks:
         - minecraft_tunnel_network
-        
+
+      stdin_open: true  # Mantener STDIN abierto (necesario para la interacción)
+      tty: true         # Asignar un pseudo-TTY (necesario para ver la salida interactiva)
+      
       # 5. La configuración de playit.gg se guardará aquí.
       #    Reemplaza 'playit_config_data' con el nombre de tu volumen si ya usas uno.
       volumes:
