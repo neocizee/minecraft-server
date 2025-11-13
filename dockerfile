@@ -1,5 +1,4 @@
-# Usa la imagen base oficial de Java
-FROM eclipse-temurin:17-jre-alpine
+FROM openjdk:17-jre-slim
 
 ARG MINECRAFT_VERSION="1.20.1"
 ARG PAPER_BUILD="latest"
