@@ -32,27 +32,27 @@ services:
   # SERVICIO 2: PLAYIT.GG TUNNEL (USO DE IMAGEN OFICIAL)
   # ----------------------------------------------------
   playit_agent:
-      image: playitdev/playit:latest # Usar imagen pre-construida
-      container_name: playit_minecraft_tunnel
-      restart: unless-stopped
+    image: playitdev/playit:latest # Usar imagen pre-construida
+    container_name: playit_minecraft_tunnel
+    restart: unless-stopped
+    
+    # *** ELIMINAMOS LA SECCIÓN 'build:' ***
+
+    # CRÍTICO: Mantenemos el STDIN abierto y TTY para capturar el código de claim
+    stdin_open: true
+    tty: true
+
+    # CRÍTICO: Forzamos DNS públicos para evitar problemas de red
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+
+    networks:
+      - minecraft_tunnel_network
       
-      # *** ELIMINAMOS LA SECCIÓN 'build:' ***
-
-      # CRÍTICO: Mantenemos el STDIN abierto y TTY para capturar el código de claim
-      stdin_open: true
-      tty: true
-  
-      # CRÍTICO: Forzamos DNS públicos para evitar problemas de red
-      dns:
-        - 8.8.8.8
-        - 1.1.1.1
-
-      networks:
-        - minecraft_tunnel_network
-        
-      # CRÍTICO: Volumen para persistir la configuración (La imagen oficial usa /etc/playit)
-      volumes:
-        - playit_config_data:/etc/playit
+    # CRÍTICO: Volumen para persistir la configuración (La imagen oficial usa /etc/playit)
+    volumes:
+      - playit_config_data:/etc/playit
 # ----------------------------------------------------\
 # DEFINICIÓN DE VOLÚMENES Y REDES 
 # ----------------------------------------------------\
