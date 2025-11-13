@@ -8,12 +8,7 @@ RUN apk update && \
 
 WORKDIR /tmp/build
 
-# CRÍTICO: VARIABLE CACHE BUSTER
-# Este argumento se pasa desde docker-compose.yml y debe cambiar en cada intento fallido.
-ARG CACHE_BUST
-RUN echo "Cache Buster Key: ${CACHE_BUST}"
-
-# CRÍTICO: Descarga de PaperMC Build 196. Esta línea se ejecutará cada vez que CACHE_BUST cambie.
+# CRÍTICO: Descarga el JAR a un directorio temporal para que no entre en conflicto con el volumen.
 RUN curl -fL -o paper.jar "https://api.papermc.io/v2/projects/paper/versions/1.20.1/builds/196/downloads/paper-1.20.1-196.jar"
 
 # Configuración básica
@@ -47,5 +42,5 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 
 EXPOSE 25565
 
-# CMD base
-CMD java $JAVA_OPTS $JAVA_OPTS_GC -jar paper.jar nogui
+# El CMD ahora ejecuta nuestro script de entrada
+CMD ["/usr/local/bin/entrypoint.sh"]

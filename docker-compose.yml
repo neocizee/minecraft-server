@@ -5,13 +5,13 @@ services:
       context: . 
       args: 
         SERVER_ENV: ${SERVER_ENV}
-        CACHE_BUST: ${BUILD_ID} # <-- CRÍTICO: Pasa la variable dinámica aquí
+        CACHE_BUST: ${BUILD_ID} # Cache Buster (cambiar el valor de BUILD_ID si falla)
         
     container_name: ${CONTAINER_NAME}
     restart: unless-stopped
 
-    # El comando usa las variables de optimización (RAM y G1GC)
-    command: java $JAVA_OPTS $JAVA_OPTS_GC -jar paper.jar nogui
+    # CRÍTICO: El comando es ahora el entrypoint.sh
+    # command: java $JAVA_OPTS $JAVA_OPTS_GC -jar paper.jar nogui <--- ELIMINADO
 
     # Límites de recursos (Max 2 núcleos)
     deploy:
@@ -19,29 +19,27 @@ services:
         limits:
           cpus: '2.0'
           memory: 4096m
-        # ... (reservations)
+        reservations:
+          cpus: '0.5'
+          memory: 1G
     
-    # Persistencia de Datos
+    # CRÍTICO: El volumen ahora apunta a /data (donde se moverán los archivos)
     volumes:
-      - minecraft_data:/server 
+      - minecraft_data:/data 
     
     # Variables de Entorno (Se mantienen las optimizaciones G1GC y RAM)
     environment:
       JAVA_OPTS: "-Xmx${MINECRAFT_MEMORY_LIMIT} -Xms1G" # RAM
       EULA: "TRUE"
-      # CRÍTICO: Define la variable de control de caché
-      BUILD_ID: "1" # <-- ¡DEBES CAMBIAR ESTE VALOR EN CADA INTENTO!
-      
-      # Flags de Optimización G1GC integradas
+      BUILD_ID: "4" # <-- Cambia este valor para forzar un nuevo build limpio
       JAVA_OPTS_GC: "-XX:+AlwaysPreTouch -XX:+DisableExplicitGC -XX:+ParallelRefProcEnabled -XX:+PerfDisableSharedMem -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1HeapRegionSize=8M -XX:G1HeapWastePercent=5 -XX:G1MaxNewSizePercent=40 -XX:G1MixedGCCountTarget=4 -XX:G1NewSizePercent=30 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:G1ReservePercent=20 -XX:InitiatingHeapOccupancyPercent=15 -XX:MaxGCPauseMillis=200 -XX:MaxTenuringThreshold=1 -XX:SurvivorRatio=32"
           
     expose:
       - "25565"
 
-    # Redes (Corregido)
     networks:
       - default 
-      - minecraft_tunnel_network
+      - minecraft_tunnel_network 
   
 # Definición de Volúmenes y Redes
 volumes:
