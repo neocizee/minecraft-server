@@ -1,10 +1,12 @@
-# Usamos una imagen base con capacidad de instalación (ej. Ubuntu o Debian)
-FROM ubuntu:latest
+# Usamos una imagen base estable de Debian
+FROM debian:stable
 
-# Instalar dependencias
-RUN apt-get update && apt-get install -y curl gnupg2
+# Instalar dependencias necesarias y el cliente playit
+# Añadimos 'coreutils' para usar 'stdbuf'
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl gnupg2 coreutils && \
+    rm -rf /var/lib/apt/lists/*
 
-# Instalar playit.gg
 # 1. Añade la llave GPG
 RUN curl -SsL https://playit-cloud.github.io/ppa/key.gpg | gpg --dearmor | tee /etc/apt/trusted.gpg.d/playit.gpg >/dev/null
 
@@ -14,6 +16,6 @@ RUN echo "deb [signed-by=/etc/apt/trusted.gpg.d/playit.gpg] https://playit-cloud
 # 3. Actualiza e instala playit
 RUN apt-get update && apt-get install -y playit
 
-# 4. CRÍTICO: Comando de inicio simplificado.
-# El agente se iniciará y te dará el código de claim.
-CMD ["playit"]
+# CRÍTICO: Usamos ENTRYPOINT con stdbuf -o L
+# Esto fuerza la impresión inmediata del output (como el código de claim) en los logs de Docker.
+ENTRYPOINT ["stdbuf", "-o", "L", "/usr/bin/playit"]
