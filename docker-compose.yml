@@ -3,15 +3,14 @@ services:
   minecraft_server:
     # Build la imagen
     build: 
-      context: . 
-      dockerfile: Dockerfile # <--- FIX 1: Fuerza la ruta/nombre exacto (D mayúscula)
+      context: . # Busca 'dockerfile' en la raíz del contexto
       args: 
         SERVER_ENV: ${SERVER_ENV} 
         
     container_name: ${CONTAINER_NAME}
     restart: unless-stopped
 
-    # Límites de recursos
+    # Límites de recursos (GOOD PRACTICE)
     deploy:
       resources:
         limits:
@@ -21,9 +20,8 @@ services:
           cpus: '0.5'
           memory: 1G
     
-    # Persistencia de Datos
+    # Persistencia de Datos (FIX DE VOLUMEN)
     volumes:
-      # Usa el nombre fijo 'minecraft_data' (placeholder)
       - minecraft_data:/server 
     
     # Variables de Entorno
@@ -39,10 +37,10 @@ services:
       - default 
       - cloudflare_tunnel_network 
   
-# Definición de Volúmenes (Aislamiento de Entorno)
+# Definición de Volúmenes (FIX DE VOLUMEN)
 volumes:
-  minecraft_data: # Define el placeholder usado en el servicio
-    name: ${WORLD_VOLUME_NAME} # <--- FIX 2: Usa la variable para el nombre real del volumen
+  minecraft_data: 
+    name: ${WORLD_VOLUME_NAME}
     driver: local
 
 # Redes
