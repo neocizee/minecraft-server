@@ -1,19 +1,19 @@
 version: '3.8'
 services:
   minecraft_server:
-    # Build la imagen
     build: 
       context: . 
       args: 
-        SERVER_ENV: ${SERVER_ENV} # Pasa la variable de entorno (prod/staging) al Dockerfile
+        SERVER_ENV: ${SERVER_ENV}
+        CACHE_BUST: ${BUILD_ID} # Cache Buster (cambiar el valor de BUILD_ID si falla)
         
-    container_name: ${CONTAINER_NAME} # Nombre único por entorno
+    container_name: ${CONTAINER_NAME}
     restart: unless-stopped
 
-    # CRÍTICO: El comando concatena las flags de RAM (-Xmx) y las flags de optimización (JAVA_OPTS_GC)
-    command: java $JAVA_OPTS $JAVA_OPTS_GC -jar paper.jar nogui
+    # CRÍTICO: El comando es ahora el entrypoint.sh
+    # command: java $JAVA_OPTS $JAVA_OPTS_GC -jar paper.jar nogui <--- ELIMINADO
 
-    # Límites de recursos (BUENA PRÁCTICA: Máximo 2 núcleos)
+    # Límites de recursos (Max 2 núcleos)
     deploy:
       resources:
         limits:
@@ -23,35 +23,30 @@ services:
           cpus: '0.5'
           memory: 1G
     
-    # Persistencia de Datos: CRÍTICO
+    # CRÍTICO: El volumen ahora apunta a /data (donde se moverán los archivos)
     volumes:
-      # Mapea el volumen nombrado al WORKDIR del contenedor
-      - minecraft_data:/server 
+      - minecraft_data:/data 
     
-    # Variables de Entorno
+    # Variables de Entorno (Se mantienen las optimizaciones G1GC y RAM)
     environment:
-      # 1. Configuración de RAM
-      JAVA_OPTS: "-Xmx${MINECRAFT_MEMORY_LIMIT} -Xms1G" 
+      JAVA_OPTS: "-Xmx${MINECRAFT_MEMORY_LIMIT} -Xms1G" # RAM
       EULA: "TRUE"
-      
-      # 2. Flags de Optimización G1GC integradas
+      BUILD_ID: "4" # <-- Cambia este valor para forzar un nuevo build limpio
       JAVA_OPTS_GC: "-XX:+AlwaysPreTouch -XX:+DisableExplicitGC -XX:+ParallelRefProcEnabled -XX:+PerfDisableSharedMem -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1HeapRegionSize=8M -XX:G1HeapWastePercent=5 -XX:G1MaxNewSizePercent=40 -XX:G1MixedGCCountTarget=4 -XX:G1NewSizePercent=30 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:G1ReservePercent=20 -XX:InitiatingHeapOccupancyPercent=15 -XX:MaxGCPauseMillis=200 -XX:MaxTenuringThreshold=1 -XX:SurvivorRatio=32"
           
     expose:
       - "25565"
 
-    # 🛑 FIX CRÍTICO: Usar el nombre de red definido abajo
     networks:
       - default 
       - minecraft_tunnel_network 
   
-# Definición de Volúmenes
+# Definición de Volúmenes y Redes
 volumes:
   minecraft_data: 
     name: ${WORLD_VOLUME_NAME}
     driver: local
 
-# Redes (Aquí se define la red que el servicio usa)
 networks:
   default:
     driver: bridge
