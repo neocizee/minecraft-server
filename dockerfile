@@ -1,30 +1,30 @@
-FROM alpine:3.18 
+FROM openjdk:17-jre-slim
 
-# 2. Instala OpenJDK 17-JRE (Java Runtime Environment) en el contenedor
-RUN apk update && \
-    apk add --no-cache openjdk17-jre && \
-    rm -rf /var/cache/apk/*
+# CRÍTICO: Instalar 'curl' para una descarga segura y 'bash' para la lógica de scripts.
+# openjdk:17-jre-slim está basado en Debian/Ubuntu, así que usamos 'apt'.
+RUN apt update && \
+    apt install -y curl bash && \
+    rm -rf /var/lib/apt/lists/*
+
 ARG MINECRAFT_VERSION="1.20.1"
 ARG PAPER_BUILD="latest"
 
 # Usuario por defecto y directorio de trabajo
 WORKDIR /server
 
-# Descarga del jar
-RUN wget -O paper.jar https://api.papermc.io/v2/projects/paper/versions/${MINECRAFT_VERSION}/builds/${PAPER_BUILD}/downloads/paper-${MINECRAFT_VERSION}-${PAPER_BUILD}.jar
+# Descarga del jar: Se usa 'curl' con redireccionamiento (-L) y salida (-o)
+RUN curl -L -o paper.jar "https://api.papermc.io/v2/projects/paper/versions/${MINECRAFT_VERSION}/builds/${PAPER_BUILD}/downloads/paper-${MINECRAFT_VERSION}-${PAPER_BUILD}.jar"
 RUN echo "eula=true" > eula.txt
 
 EXPOSE 25565
 
-# --- Lógica de Diferenciación por Entorno (usando ARG SERVER_ENV) ---
+# --- Lógica de Diferenciación por Entorno ---
 ARG SERVER_ENV
 
 # 1. Copia el server.properties específico
-# Esto requiere que el archivo server.properties.main exista en el repositorio.
 COPY server.properties.${SERVER_ENV} /server/server.properties
 
 # 2. Copia los plugins comunes de forma segura
-# Se crea la carpeta 'plugins' si no existe, y luego se copian los archivos
 RUN mkdir -p /server/plugins
 COPY plugins /server/plugins
 
@@ -33,5 +33,5 @@ RUN if [ "$SERVER_ENV" = "staging" ]; then \
       cp -r plugins.staging/. /server/plugins; \
     fi
 
-# Comando final de ejecución. Quitamos -Xmx/-Xms si lo definimos en docker-compose
+# Comando final de ejecución.
 CMD ["java", "-jar", "paper.jar", "nogui"]
