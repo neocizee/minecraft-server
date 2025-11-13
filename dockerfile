@@ -1,9 +1,9 @@
-# 1. CRÍTICO: Usar la imagen base Alpine con Java. Es ligera y minimiza fallos de build.
+# Base estable y ligera (Alpine con Java 17)
 FROM eclipse-temurin:17-jre-alpine
 
-# 2. Instalar wget con el gestor de paquetes de Alpine (apk).
+# CRÍTICO: Instalar curl y wget. (Doble seguridad para la descarga)
 RUN apk update && \
-    apk add --no-cache wget && \
+    apk add --no-cache curl wget && \
     rm -rf /var/cache/apk/*
 
 ARG MINECRAFT_VERSION="1.20.1"
@@ -11,8 +11,11 @@ ARG PAPER_BUILD="latest"
 
 WORKDIR /server
 
-# 3. Descarga estable: Comando simple. (Si la red es estable, esto funciona).
-RUN wget -O paper.jar https://api.papermc.io/v2/projects/paper/versions/${MINECRAFT_VERSION}/builds/${PAPER_BUILD}/downloads/paper-${MINECRAFT_VERSION}-${PAPER_BUILD}.jar
+# CRÍTICO: Descarga con curl -L (maneja redirecciones) y wget de fallback
+# Intentamos descargar con curl, si falla, wget (aunque sabemos que puede fallar)
+RUN curl -fL -o paper.jar "https://api.papermc.io/v2/projects/paper/versions/${MINECRAFT_VERSION}/builds/${PAPER_BUILD}/downloads/paper-${MINECRAFT_VERSION}-${PAPER_BUILD}.jar" || \
+    wget -O paper.jar "https://api.papermc.io/v2/projects/paper/versions/${MINECRAFT_VERSION}/builds/${PAPER_BUILD}/downloads/paper-${MINECRAFT_VERSION}-${PAPER_BUILD}.jar"
+
 RUN echo "eula=true" > eula.txt
 
 EXPOSE 25565
@@ -26,5 +29,5 @@ RUN if [ "$SERVER_ENV" = "staging" ]; then \
       cp -r plugins.staging/. /server/plugins; \
     fi
 
-# El CMD base será sobrescrito por 'command:' en docker-compose
+# CMD base (Será anulado por docker-compose)
 CMD ["java", "-jar", "paper.jar", "nogui"]
