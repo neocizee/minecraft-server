@@ -29,7 +29,9 @@ services:
     environment:
       JAVA_OPTS: "-Xmx${MINECRAFT_MEMORY_LIMIT} -Xms1G" # Usa la variable de Portainer para el límite
       EULA: "TRUE"
-
+      
+    command: java $JAVA_OPTS -jar paper.jar nogui
+    
     expose:
       - "25565"
 
