@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   # ----------------------------------------------------
-  # SERVICIO 1: MINECRAFT SERVER (Se mantiene estable)
+  # SERVICIO 1: MINECRAFT SERVER (Tu configuración estable)
   # ----------------------------------------------------
   minecraft_server:
     build: 
@@ -9,7 +9,7 @@ services:
       dockerfile: dockerfile 
       args: 
         SERVER_ENV: ${SERVER_ENV:-prod} 
-        CACHE_BUST: ${BUILD_ID:-12} # Asegúrate de que este número cambie si modificas el Dockerfile
+        CACHE_BUST: ${BUILD_ID:-12}
         
     container_name: ${CONTAINER_NAME:-mc-server}
     restart: unless-stopped
@@ -28,14 +28,13 @@ services:
       EULA: "TRUE"
       JAVA_OPTS_GC: "-XX:+AlwaysPreTouch -XX:+DisableExplicitGC -XX:+ParallelRefProcEnabled -XX:+PerfDisableSharedMem -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1HeapRegionSize=8M -XX:G1HeapWastePercent=5 -XX:G1MaxNewSizePercent=40 -XX:G1MixedGCCountTarget=4 -XX:G1NewSizePercent=30 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:G1ReservePercent=20 -XX:InitiatingHeapOccupancyPercent=15 -XX:MaxGCPauseMillis=200 -XX:MaxTenuringThreshold=1 -XX:SurvivorRatio=32"
       
-    # Puerto interno que usa Minecraft
     expose: [ "25565" ] 
     networks:
       - default 
       - minecraft_tunnel_network 
       
   # ----------------------------------------------------
-  # SERVICIO 2: PLAYIT.GG TUNNEL (CONFIGURACIÓN CON SECRET_KEY)
+  # SERVICIO 2: PLAYIT.GG TUNNEL (MODO CLAIM CODE/INTERACTIVO)
   # ----------------------------------------------------
   playit_agent:
     # 1. CRÍTICO: Usar la imagen oficial y estable
@@ -43,13 +42,12 @@ services:
     container_name: playit_minecraft_tunnel
     restart: unless-stopped
     
-    # 2. CRÍTICO: Inyectar la clave secreta desde el archivo .env
-    environment:
-      # playit-agent busca específicamente la variable SECRET_KEY para autenticarse
-      - SECRET_KEY=${PLAYIT_SECRET_KEY} 
-      
-    # Eliminamos 'command' o 'entrypoint' para que use el por defecto de la imagen, 
-    # que es el modo de agente que se ejecuta al recibir la clave.
+    # 2. CRÍTICO: Forzamos el modo interactivo con 'command' para que te dé el Claim Code
+    command: ["/usr/bin/playit"] 
+    
+    # Mantenemos STDIN/TTY para ver el claim code en los logs
+    stdin_open: true
+    tty: true
 
     # DNS fix como buena práctica
     dns:
@@ -59,7 +57,7 @@ services:
     networks:
       - minecraft_tunnel_network
       
-    # 3. Mantenemos el volumen para persistencia (PlayIt lo usará para guardar la config)
+    # 3. CRÍTICO: Volumen para persistir la configuración
     volumes:
       - playit_config_data:/etc/playit 
 
