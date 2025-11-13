@@ -1,23 +1,20 @@
 version: '3.8'
 services:
   # ----------------------------------------------------
-  # SERVICIO 1: MINECRAFT SERVER (PAPERC)
+  # SERVICIO 1: MINECRAFT SERVER (Tu configuración estable)
   # ----------------------------------------------------
   minecraft_server:
-    # Construye la imagen usando el Dockerfile en la raíz
+    # Asegúrate que el BUILD_ID se actualice para forzar el build de tu servidor de MC.
     build: 
       context: . 
       args: 
         SERVER_ENV: ${SERVER_ENV:-prod} 
-        CACHE_BUST: ${BUILD_ID:-1} # Cambia BUILD_ID para forzar un build limpio
+        CACHE_BUST: ${BUILD_ID:-7} # <<-- CAMBIA este número a 7, 8, etc., si haces cambios en tu Dockerfile
         
     container_name: ${CONTAINER_NAME:-mc-server}
     restart: unless-stopped
-
-    # CRÍTICO: Ejecuta el script de inicialización
     command: /usr/local/bin/entrypoint.sh 
 
-    # Límites de recursos (BUENA PRÁCTICA)
     deploy:
       resources:
         limits:
@@ -27,48 +24,39 @@ services:
           cpus: '0.5'
           memory: 1G
     
-    # Volumen: Mapea al directorio /data (usado por entrypoint.sh)
     volumes:
       - minecraft_data:/data 
     
-    # Variables de Entorno (Usadas por entrypoint.sh y el servidor)
     environment:
       JAVA_OPTS: "-Xmx${MINECRAFT_MEMORY_LIMIT:-3G} -Xms1G" 
       EULA: "TRUE"
       JAVA_OPTS_GC: "-XX:+AlwaysPreTouch -XX:+DisableExplicitGC -XX:+ParallelRefProcEnabled -XX:+PerfDisableSharedMem -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1HeapRegionSize=8M -XX:G1HeapWastePercent=5 -XX:G1MaxNewSizePercent=40 -XX:G1MixedGCCountTarget=4 -XX:G1NewSizePercent=30 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:G1ReservePercent=20 -XX:InitiatingHeapOccupancyPercent=15 -XX:MaxGCPauseMillis=200 -XX:MaxTenuringThreshold=1 -XX:SurvivorRatio=32"
           
     expose:
-      - "25565" # Puerto interno de Minecraft
+      - "25565" 
 
     networks:
       - default 
-      - minecraft_tunnel_network # Se comunica con el agente playit
+      - minecraft_tunnel_network 
       
   # ----------------------------------------------------
-  # SERVICIO 2: PLAYIT.GG TUNNEL (BUILD LOCAL)
+  # SERVICIO 2: PLAYIT.GG TUNNEL (IMAGEN OFICIAL - SIN BUILD)
   # ----------------------------------------------------
   playit_agent:
-      # Nombre de la imagen local que se creará
-      image: playit-agent-build:latest
+      # CRÍTICO: Usamos la imagen oficial de PlayIt.gg. Esto elimina el playit.dockerfile.
+      image: playitdev/playit:latest
       container_name: playit_minecraft_tunnel
       restart: unless-stopped
       
-      # CRÍTICO: Usamos el archivo Dockerfile local
-      build:
-        context: .
-        dockerfile: playit.dockerfile
-        
       # Esenciales para obtener el código de claim
       stdin_open: true
       tty: true
   
-      # Conectamos a la red privada
       networks:
         - minecraft_tunnel_network
         
-      # Volumen para persistir la configuración
+      # Volumen para persistir la configuración (Path compatible con la imagen oficial)
       volumes:
-        # Path correcto para el agente playit.gg en la imagen Debian (ejecutándose como root)
         - playit_config_data:/root/.playit 
 
 # ----------------------------------------------------
