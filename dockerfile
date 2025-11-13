@@ -1,4 +1,4 @@
-FROM openjdk:17-jre-slim
+FROM eclipse-temurin:17-jre-alpine
 
 ARG MINECRAFT_VERSION="1.20.1"
 ARG PAPER_BUILD="latest"
