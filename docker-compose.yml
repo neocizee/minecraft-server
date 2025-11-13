@@ -41,11 +41,13 @@ services:
 # Definición de Volúmenes y Redes
 volumes:
   minecraft_data: 
-    name: ${WORLD_VOLUME_NAME} # Nombre único por entorno (mc_prod_data/mc_staging_data)
+    name: ${WORLD_VOLUME_NAME}
     driver: local
 
 networks:
   default:
     driver: bridge
-  cloudflare_tunnel_network: # Necesaria para la conectividad del túnel
-    external: true
+  cloudflare_tunnel_network:
+    name: cloudflare_tunnel_network
+    driver: bridge
+    #external: true
