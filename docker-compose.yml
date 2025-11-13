@@ -9,7 +9,7 @@ services:
       dockerfile: dockerfile 
       args: 
         SERVER_ENV: ${SERVER_ENV:-prod} 
-        CACHE_BUST: ${BUILD_ID:-10} 
+        CACHE_BUST: ${BUILD_ID:-11} # <<-- ¡CAMBIA ESTE NÚMERO! (e.g., a 11)
     container_name: ${CONTAINER_NAME:-mc-server}
     restart: unless-stopped
     command: /usr/local/bin/entrypoint.sh 
@@ -22,52 +22,55 @@ services:
     environment:
       JAVA_OPTS: "-Xmx${MINECRAFT_MEMORY_LIMIT:-3G} -Xms1G" 
       EULA: "TRUE"
-      JAVA_OPTS_GC: "-XX:+AlwaysPreTouch -XX:+DisableExplicitGC -XX:+ParallelRefProcEnabled -XX:+PerfDisableSharedMem -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1HeapRegionSize=8M -XX:G1HeapWastePercent=5 -XX:G1MaxNewSizePercent=40 -XX:G1MixedGCCountTarget=4 -XX:G1NewSizePercent=30 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:G1ReservePercent=20 -XX:InitiatingHeapOccupancyPercent=15 -XX:MaxGCPauseMilli200 -XX:MaxTenuringThreshold=1 -XX:SurvivorRatio=32"
+      JAVA_OPTS_GC: "-XX:+AlwaysPreTouch -XX:+DisableExplicitGC -XX:+ParallelRefProcEnabled -XX:+PerfDisableSharedMem -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1HeapRegionSize=8M -XX:G1HeapWastePercent=5 -XX:G1MaxNewSizePercent=40 -XX:G1MixedGCCountTarget=4 -XX:G1NewSizePercent=30 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:G1ReservePercent=20 -XX:InitiatingHeapOccupancyPercent=15 -XX:MaxGCPauseMillis=200 -XX:MaxTenuringThreshold=1 -XX:SurvivorRatio=32"
     expose: [ "25565" ]
     networks:
       - default 
       - minecraft_tunnel_network 
       
-  # ----------------------------------------------------
-  # SERVICIO 2: PLAYIT.GG TUNNEL (CON DNS FIX Y ENV VAR)
-  # ----------------------------------------------------
+  # ----------------------------------------------------\
+  # SERVICIO 2: PLAYIT.GG TUNNEL (CON MÉTODO APT ESTABLE)\
+  # ----------------------------------------------------\
   playit_agent:
       image: playit-agent-build:latest
       container_name: playit_minecraft_tunnel
       restart: unless-stopped
+      
       build:
         context: .
-        dockerfile: playit.dockerfile
+        dockerfile: playit.dockerfile # Usa el nuevo Dockerfile con Debian/APT
       
-      # CRÍTICO: FORZAR DNS PÚBLICO
-      dns: [ "8.8.8.8", "1.1.1.1" ]
+      # CRÍTICO: Forzamos DNS públicos para evitar problemas de resolución de PlayIt.cloud
+      dns:
+        - 8.8.8.8
+        - 1.1.1.1
       
-      entrypoint: /usr/local/bin/playit-entrypoint.sh
-      
-      # CRÍTICO: Definimos la URL de descarga como variable de entorno
-      environment:
-        - PLAYIT_URL=https://playit.cloud/api/v1/agent/downloads/playit-linux-x86_64
-      
+      # Se mantiene 'stdin_open' y 'tty' para obtener el código de claim
       stdin_open: true
       tty: true
+  
       networks:
         - minecraft_tunnel_network
+        
+      # CRÍTICO: Volumen mapeado a la ubicación de configuración en Debian
       volumes:
-        - playit_config_data:/app
-# ----------------------------------------------------
+        - playit_config_data:/root/.playit
+
+# ----------------------------------------------------\
 # DEFINICIÓN DE VOLÚMENES Y REDES 
-# ----------------------------------------------------
+# ----------------------------------------------------\
 volumes:
   minecraft_data:
     name: ${WORLD_VOLUME_NAME:-mc-world-data}
     driver: local
+  # Nuevo volumen para persistir la configuración de playit
   playit_config_data:
-    name: playit_config 
+    name: ${PLAYIT_CONFIG_VOLUME_NAME:-playit-config}
     driver: local
-    
+
 networks:
   default:
     driver: bridge
-  minecraft_tunnel_network: 
-    name: minecraft_tunnel_network 
+  minecraft_tunnel_network:
     driver: bridge
+    internal: true
