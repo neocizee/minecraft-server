@@ -11,9 +11,9 @@ services:
     restart: unless-stopped
 
     # CRÍTICO: El comando es ahora el entrypoint.sh
-    # command: java $JAVA_OPTS $JAVA_OPTS_GC -jar paper.jar nogui <--- ELIMINADO
+    command: /usr/local/bin/entrypoint.sh # Usar el script como CMD si no está definido en el Dockerfile
 
-    # Límites de recursos (Max 2 núcleos)
+    # Límites de recursos (Max 2 núcleos, 4gb RAM)
     deploy:
       resources:
         limits:
@@ -31,7 +31,7 @@ services:
     environment:
       JAVA_OPTS: "-Xmx${MINECRAFT_MEMORY_LIMIT} -Xms1G" # RAM
       EULA: "TRUE"
-      BUILD_ID: "4" # <-- Cambia este valor para forzar un nuevo build limpio
+      BUILD_ID: "5" # <-- Cambia este valor para forzar un nuevo build limpio
       JAVA_OPTS_GC: "-XX:+AlwaysPreTouch -XX:+DisableExplicitGC -XX:+ParallelRefProcEnabled -XX:+PerfDisableSharedMem -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1HeapRegionSize=8M -XX:G1HeapWastePercent=5 -XX:G1MaxNewSizePercent=40 -XX:G1MixedGCCountTarget=4 -XX:G1NewSizePercent=30 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:G1ReservePercent=20 -XX:InitiatingHeapOccupancyPercent=15 -XX:MaxGCPauseMillis=200 -XX:MaxTenuringThreshold=1 -XX:SurvivorRatio=32"
           
     expose:
