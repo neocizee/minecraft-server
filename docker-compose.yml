@@ -4,20 +4,32 @@ services:
     # Build la imagen
     build: 
       context: . 
-      # CRÍTICO: Eliminar la línea 'dockerfile: Dockerfile' si el archivo es 'dockerfile'
+      dockerfile: Dockerfile # <--- FIX 1: Fuerza la ruta/nombre exacto (D mayúscula)
       args: 
         SERVER_ENV: ${SERVER_ENV} 
         
     container_name: ${CONTAINER_NAME}
     restart: unless-stopped
 
-    # Límites de recursos...
+    # Límites de recursos
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4096m
+        reservations:
+          cpus: '0.5'
+          memory: 1G
     
     # Persistencia de Datos
     volumes:
+      # Usa el nombre fijo 'minecraft_data' (placeholder)
       - minecraft_data:/server 
     
-    # Variables de Entorno...
+    # Variables de Entorno
+    environment:
+      JAVA_OPTS: "-Xmx${MINECRAFT_MEMORY_LIMIT} -Xms1G" 
+      EULA: "TRUE"
 
     expose:
       - "25565"
@@ -26,11 +38,11 @@ services:
     networks:
       - default 
       - cloudflare_tunnel_network 
-
-# Definición de Volúmenes (CRÍTICO para el aislamiento)
+  
+# Definición de Volúmenes (Aislamiento de Entorno)
 volumes:
-  minecraft_data: 
-    name: ${WORLD_VOLUME_NAME}
+  minecraft_data: # Define el placeholder usado en el servicio
+    name: ${WORLD_VOLUME_NAME} # <--- FIX 2: Usa la variable para el nombre real del volumen
     driver: local
 
 # Redes
