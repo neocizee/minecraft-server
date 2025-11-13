@@ -3,15 +3,14 @@ services:
   minecraft_server:
     # Build la imagen
     build: 
-      context: . # Usa la carpeta actual como contexto
-      # CRÍTICO: Pasar la variable SERVER_ENV al Dockerfile
+      context: . 
       args: 
         SERVER_ENV: ${SERVER_ENV} 
         
-    container_name: ${CONTAINER_NAME} # Definido por variable (ej: mc_prod)
+    container_name: ${CONTAINER_NAME}
     restart: unless-stopped
 
-    # Límites de recursos (Aplicados por Docker/Portainer)
+    # Límites de recursos
     deploy:
       resources:
         limits:
@@ -21,15 +20,13 @@ services:
           cpus: '0.5'
           memory: 1G
     
-    # Persistencia de Datos: CRÍTICO para el mundo.
+    # Persistencia de Datos: CRÍTICO
+    # Usa la variable de Portainer, mapeada al WORKDIR del contenedor.
     volumes:
-      # Monta el volumen de mundo específico para la rama
-      - ${WORLD_VOLUME_NAME}:/server 
+      - ${WORLD_VOLUME_NAME}:/server # Sintaxis correcta: ${Volumen}:/Path/Container
       
-    # Variables de Entorno - Usaremos variables para definir la RAM de Java
+    # Variables de Entorno
     environment:
-      # RAM de Java (se usará como -Xmx/-Xms en el CMD de Portainer, no en el Dockerfile)
-      # Esto permite cambiar la RAM sin reconstruir la imagen.
       JAVA_OPTS: "-Xmx${MINECRAFT_MEMORY_LIMIT} -Xms1G" 
       EULA: "TRUE"
 
@@ -41,11 +38,9 @@ services:
       - default 
       - cloudflare_tunnel_network 
 
-# Volúmenes para persistir el mundo de Minecraft
-volumes:
-  # El nombre real del volumen se define por la variable ${WORLD_VOLUME_NAME}
-  ${WORLD_VOLUME_NAME}:
-    driver: local 
+# --- SECCIÓN VOLUMES ELIMINADA ---
+# La sección "volumes:" raíz se elimina. Docker Compose/Portainer creará 
+# automáticamente el volumen usando el nombre inyectado por WORLD_VOLUME_NAME.
 
 # Redes
 networks:
