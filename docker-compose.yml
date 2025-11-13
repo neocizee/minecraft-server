@@ -28,41 +28,37 @@ services:
       - default 
       - minecraft_tunnel_network 
       
-# ----------------------------------------------------
+  # ----------------------------------------------------
   # SERVICIO 2: PLAYIT.GG TUNNEL (CONFIGURACIÓN ESTABLE)
   # ----------------------------------------------------
   playit_agent:
-    # CRÍTICO: Usamos la imagen oficial de GitHub Container Registry (GHCR.IO).
-    # Esto resuelve tu error de "no such file or directory" y otros fallos de build.
-    image: ghcr.io/playit-cloud/playit-agent:latest 
-    container_name: playit_minecraft_tunnel
-    restart: unless-stopped
-    
-    # <<<<<< ELIMINA TODA LA SECCIÓN 'build:' si existe >>>>>>
-    # build:
-    #   context: .
-    #   dockerfile: playit.dockerfile 
-    
-    # CRÍTICO: Sobrescribimos el comando para forzar el modo interactivo.
-    # Esto debería evitar el error MalformedSecret si el volumen está vacío.
-    command: ["/usr/bin/playit"] 
-
-    # Esenciales para obtener el código de reclamo en los logs
-    stdin_open: true
-    tty: true
-
-    # DNS fix como buena práctica para estabilidad de red
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
-
-    networks:
-      - minecraft_tunnel_network
+      image: playit-agent-build:latest
+      container_name: playit_minecraft_tunnel
+      restart: unless-stopped
       
-    # CRÍTICO: Volumen para persistir la configuración.
-    # La ruta para esta imagen oficial es /etc/playit
-    volumes:
-      - playit_config_data:/etc/playit
+      # Usamos el build local (Dockerfile y script que descarga el binario)
+      build:
+        context: .
+        dockerfile: playit.dockerfile # Tu Dockerfile basado en Alpine
+      
+      # CRÍTICO: Forzar DNS públicos (Buena práctica para evitar fallos de red)
+      dns:
+        - 8.8.8.8
+        - 1.1.1.1
+      
+      # Usa tu script de entrada que gestiona la descarga y ejecución
+      entrypoint: /usr/local/bin/playit-entrypoint.sh
+      
+      # Esenciales para obtener el código de claim
+      stdin_open: true
+      tty: true
+      
+      networks:
+        - minecraft_tunnel_network
+        
+      # CRÍTICO: Mapea a /app, que es el WORKDIR de tu Dockerfile y donde playit guarda la config
+      volumes:
+        - playit_config_data:/app
 
       
 # ----------------------------------------------------\
@@ -72,14 +68,6 @@ volumes:
   minecraft_data:
     name: ${WORLD_VOLUME_NAME:-mc-world-data}
     driver: local
-  # Nuevo volumen para persistir la configuración de playit
   playit_config_data:
-    name: ${PLAYIT_CONFIG_VOLUME_NAME:-playit-config}
+    name: playit-config # <-- Nombre del volumen a eliminar
     driver: local
-
-networks:
-  default:
-    driver: bridge
-  minecraft_tunnel_network:
-    driver: bridge
-    internal: true
