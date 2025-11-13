@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   # ----------------------------------------------------
-  # SERVICIO 1: MINECRAFT SERVER (Estable)
+  # SERVICIO 1: MINECRAFT SERVER (Se mantiene estable)
   # ----------------------------------------------------
   minecraft_server:
     build: 
@@ -9,8 +9,7 @@ services:
       dockerfile: dockerfile 
       args: 
         SERVER_ENV: ${SERVER_ENV:-prod} 
-        # CRÍTICO: CAMBIA ESTE NÚMERO (e.g., a 12, 13) si modificas el Dockerfile
-        CACHE_BUST: ${BUILD_ID:-11}
+        CACHE_BUST: ${BUILD_ID:-12} # Asegúrate de que este número cambie si modificas el Dockerfile
         
     container_name: ${CONTAINER_NAME:-mc-server}
     restart: unless-stopped
@@ -21,7 +20,6 @@ services:
         limits: { cpus: '2.0', memory: 4096m }
         reservations: { cpus: '0.5', memory: 1G }
         
-    # El volumen ahora apunta a /data (donde el entrypoint.sh copia/ejecuta los archivos)
     volumes:
       - minecraft_data:/data
       
@@ -29,32 +27,42 @@ services:
       JAVA_OPTS: "-Xmx${MINECRAFT_MEMORY_LIMIT:-3G} -Xms1G" 
       EULA: "TRUE"
       JAVA_OPTS_GC: "-XX:+AlwaysPreTouch -XX:+DisableExplicitGC -XX:+ParallelRefProcEnabled -XX:+PerfDisableSharedMem -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1HeapRegionSize=8M -XX:G1HeapWastePercent=5 -XX:G1MaxNewSizePercent=40 -XX:G1MixedGCCountTarget=4 -XX:G1NewSizePercent=30 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:G1ReservePercent=20 -XX:InitiatingHeapOccupancyPercent=15 -XX:MaxGCPauseMillis=200 -XX:MaxTenuringThreshold=1 -XX:SurvivorRatio=32"
-    expose: [ "25565" ]
+      
+    # Puerto interno que usa Minecraft
+    expose: [ "25565" ] 
     networks:
       - default 
       - minecraft_tunnel_network 
       
   # ----------------------------------------------------
-  # SERVICIO 2: PLAYIT.GG TUNNEL (CONFIGURACIÓN FINAL)
+  # SERVICIO 2: PLAYIT.GG TUNNEL (CONFIGURACIÓN CON SECRET_KEY)
   # ----------------------------------------------------
   playit_agent:
-      # Usar la imagen oficial
-      image: ghcr.io/playit-cloud/playit-agent:latest 
-      container_name: playit_minecraft_tunnel
-      restart: unless-stopped
+    # 1. CRÍTICO: Usar la imagen oficial y estable
+    image: ghcr.io/playit-cloud/playit-agent:latest 
+    container_name: playit_minecraft_tunnel
+    restart: unless-stopped
+    
+    # 2. CRÍTICO: Inyectar la clave secreta desde el archivo .env
+    environment:
+      # playit-agent busca específicamente la variable SECRET_KEY para autenticarse
+      - SECRET_KEY=${PLAYIT_SECRET_KEY} 
       
-      # CRÍTICO: Aquí inyectas la clave de forma segura
-      environment:
-        # playit-agent busca específicamente la variable SECRET_KEY
-        - SECRET_KEY=${PLAYIT_SECRET_KEY} 
-        
-      # Configuración adicional de PlayIt.gg (tomada de tu última versión)
-      stdin_open: true
-      tty: true
-      networks:
-        - minecraft_tunnel_network
-      volumes:
-        - playit_config_data:/etc/playit
+    # Eliminamos 'command' o 'entrypoint' para que use el por defecto de la imagen, 
+    # que es el modo de agente que se ejecuta al recibir la clave.
+
+    # DNS fix como buena práctica
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+  
+    networks:
+      - minecraft_tunnel_network
+      
+    # 3. Mantenemos el volumen para persistencia (PlayIt lo usará para guardar la config)
+    volumes:
+      - playit_config_data:/etc/playit 
+
 # ----------------------------------------------------
 # DEFINICIÓN DE VOLÚMENES Y REDES 
 # ----------------------------------------------------
@@ -63,8 +71,9 @@ volumes:
     name: ${WORLD_VOLUME_NAME:-mc-world-data}
     driver: local
   playit_config_data:
-    name: playit_config_data
+    name: ${PLAYIT_VOLUME_NAME:-playit-config-data}
+    driver: local
 
 networks:
   minecraft_tunnel_network:
-    name: mc-tunnel-net
+    name: minecraft_tunnel_network
