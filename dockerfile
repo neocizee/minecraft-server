@@ -8,14 +8,18 @@ RUN apk update && \
 
 WORKDIR /server
 
-# CRÍTICO: Usar URL FIJA para Paper 1.20.1 Build 196.
-# Esta URL apunta directamente al JAR y resuelve los errores de build.
+# CRÍTICO: VARIABLE CACHE BUSTER
+# Este argumento se pasa desde docker-compose.yml y debe cambiar en cada intento fallido.
+ARG CACHE_BUST
+RUN echo "Cache Buster Key: ${CACHE_BUST}"
+
+# CRÍTICO: Descarga de PaperMC Build 196. Esta línea se ejecutará cada vez que CACHE_BUST cambie.
 RUN curl -fL -o paper.jar "https://api.papermc.io/v2/projects/paper/versions/1.20.1/builds/196/downloads/paper-1.20.1-196.jar"
 
 # Configuración básica
 RUN echo "eula=true" > eula.txt
 
-# --- Lógica de Entorno ---
+# --- Lógica de Entorno (Se mantiene) ---
 ARG SERVER_ENV
 COPY server.properties.${SERVER_ENV} /server/server.properties
 RUN mkdir -p /server/plugins
@@ -38,6 +42,5 @@ COPY --from=builder /server/plugins /server/plugins
 
 EXPOSE 25565
 
-# El CMD ahora solo ejecuta Java con las variables de optimización (JAVA_OPTS) y RAM
-# que se definen externamente en docker-compose.
-CMD ["java", "$JAVA_OPTS", "-jar", "paper.jar", "nogui"]
+# CMD base
+CMD java $JAVA_OPTS $JAVA_OPTS_GC -jar paper.jar nogui
