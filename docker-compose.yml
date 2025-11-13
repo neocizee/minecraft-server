@@ -5,15 +5,15 @@ services:
       context: . 
       args: 
         SERVER_ENV: ${SERVER_ENV}
-        CACHE_BUST: ${BUILD_ID} # Cache Buster (cambiar el valor de BUILD_ID si falla)
+        CACHE_BUST: ${BUILD_ID} # Cache Buster
         
     container_name: ${CONTAINER_NAME}
     restart: unless-stopped
 
-    # CRÍTICO: El comando es ahora el entrypoint.sh
-    command: /usr/local/bin/entrypoint.sh # Usar el script como CMD si no está definido en el Dockerfile
+    # El comando es el script de entrada (entrypoint.sh)
+    command: /usr/local/bin/entrypoint.sh 
 
-    # Límites de recursos (Max 2 núcleos, 4gb RAM)
+    # Límites de recursos (Se mantienen)
     deploy:
       resources:
         limits:
@@ -23,30 +23,53 @@ services:
           cpus: '0.5'
           memory: 1G
     
-    # CRÍTICO: El volumen ahora apunta a /data (donde se moverán los archivos)
+    # Volumen: Mapea a /data donde entrypoint.sh copia/ejecuta los archivos
     volumes:
       - minecraft_data:/data 
     
-    # Variables de Entorno (Se mantienen las optimizaciones G1GC y RAM)
     environment:
       JAVA_OPTS: "-Xmx${MINECRAFT_MEMORY_LIMIT} -Xms1G" # RAM
       EULA: "TRUE"
-      BUILD_ID: "5" # <-- Cambia este valor para forzar un nuevo build limpio
+      BUILD_ID: "6" # <-- CAMBIA ESTE VALOR CADA VEZ QUE HAGAS UN BUILD
       JAVA_OPTS_GC: "-XX:+AlwaysPreTouch -XX:+DisableExplicitGC -XX:+ParallelRefProcEnabled -XX:+PerfDisableSharedMem -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1HeapRegionSize=8M -XX:G1HeapWastePercent=5 -XX:G1MaxNewSizePercent=40 -XX:G1MixedGCCountTarget=4 -XX:G1NewSizePercent=30 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:G1ReservePercent=20 -XX:InitiatingHeapOccupancyPercent=15 -XX:MaxGCPauseMillis=200 -XX:MaxTenuringThreshold=1 -XX:SurvivorRatio=32"
           
     expose:
-      - "25565"
+      - "25565" # Puerto interno de Minecraft
 
     networks:
       - default 
       - minecraft_tunnel_network 
-  
-# Definición de Volúmenes y Redes
+      
+  # ----------------------------------------------------
+  # NUEVO SERVICIO: PLAYIT.GG TUNNEL
+  # ----------------------------------------------------
+  playit_tunnel:
+    image: playit-cloud/playit-agent:latest
+    container_name: playit_minecraft_tunnel
+    restart: unless-stopped
+    
+    # CRÍTICO: El comando publica el puerto interno 25565 del servicio 'minecraft_server'
+    # Utiliza el flag '--host-ip' para forzar la conexión al contenedor de Minecraft.
+    command: ["--port", "25565", "--host-ip", "minecraft_server"] 
+
+    # Volumen para persistir la configuración (playit.toml)
+    volumes:
+      - playit_data:/etc/playit
+    
+    # Se conecta a la misma red interna para resolver 'minecraft_server'
+    networks:
+      - minecraft_tunnel_network
+      
+# Definición de Volúmenes (Se añaden los datos de Playit)
 volumes:
   minecraft_data: 
     name: ${WORLD_VOLUME_NAME}
     driver: local
+  playit_data: # Nuevo volumen para playit.toml
+    name: playit_data
+    driver: local
 
+# Redes
 networks:
   default:
     driver: bridge
