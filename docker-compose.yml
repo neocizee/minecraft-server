@@ -4,31 +4,20 @@ services:
     # Build la imagen
     build: 
       context: . 
+      # CRÍTICO: Eliminar la línea 'dockerfile: Dockerfile' si el archivo es 'dockerfile'
       args: 
         SERVER_ENV: ${SERVER_ENV} 
         
     container_name: ${CONTAINER_NAME}
     restart: unless-stopped
 
-    # Límites de recursos
-    deploy:
-      resources:
-        limits:
-          cpus: '2.0'
-          memory: 4096m
-        reservations:
-          cpus: '0.5'
-          memory: 1G
+    # Límites de recursos...
     
-    # Persistencia de Datos: CRÍTICO
+    # Persistencia de Datos
     volumes:
-      # A: Usamos el nombre fijo 'minecraft_data' para pasar la validación
       - minecraft_data:/server 
     
-    # Variables de Entorno
-    environment:
-      JAVA_OPTS: "-Xmx${MINECRAFT_MEMORY_LIMIT} -Xms1G" 
-      EULA: "TRUE"
+    # Variables de Entorno...
 
     expose:
       - "25565"
@@ -37,12 +26,10 @@ services:
     networks:
       - default 
       - cloudflare_tunnel_network 
-  
+
+# Definición de Volúmenes (CRÍTICO para el aislamiento)
 volumes:
-  # Define el nombre fijo 'minecraft_data' que se usa en el servicio (Punto A)
-  minecraft_data:
-    # CRÍTICO: Usa la variable de Portainer para forzar el nombre real
-    # Portainer/Docker lo nombrará 'minecraft_prod_world' o 'minecraft_staging_world'
+  minecraft_data: 
     name: ${WORLD_VOLUME_NAME}
     driver: local
 
