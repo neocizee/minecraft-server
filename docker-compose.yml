@@ -38,10 +38,10 @@ services:
       
       build:
         context: .
-        dockerfile: playit.dockerfile # Usa el Dockerfile mínimo
+        dockerfile: playit.dockerfile # Usa el Dockerfile mínimo de Alpine
       
       # CRÍTICO: FORZAR DNS PÚBLICO
-      # Esto obliga al contenedor a usar DNS fiables en lugar del DNS roto del host.
+      # Esto obliga al contenedor a usar DNS fiables (8.8.8.8)
       dns:
         - 8.8.8.8
         - 1.1.1.1
