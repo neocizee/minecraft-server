@@ -29,30 +29,33 @@ services:
       - minecraft_tunnel_network 
       
   # ----------------------------------------------------
-  # SERVICIO 2: PLAYIT.GG TUNNEL (FIX DE COMANDO)
+  # SERVICIO 2: PLAYIT.GG TUNNEL (CONFIGURACIÓN ESTABLE)
   # ----------------------------------------------------
   playit_agent:
-    image: playitdev/playit:latest # Usar imagen pre-construida
-    container_name: playit_minecraft_tunnel
-    restart: unless-stopped
-    
-    # *** ELIMINAMOS LA SECCIÓN 'build:' ***
-
-    # CRÍTICO: Mantenemos el STDIN abierto y TTY para capturar el código de claim
-    stdin_open: true
-    tty: true
-
-    # CRÍTICO: Forzamos DNS públicos para evitar problemas de red
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
-
-    networks:
-      - minecraft_tunnel_network
+      # CRÍTICO: Usamos la imagen oficial de GitHub Container Registry (GHCR.IO)
+      image: ghcr.io/playit-cloud/playit-agent:latest 
+      container_name: playit_minecraft_tunnel
+      restart: unless-stopped
       
-    # CRÍTICO: Volumen para persistir la configuración (La imagen oficial usa /etc/playit)
-    volumes:
-      - playit_config_data:/etc/playit
+      # CRÍTICO: Sobrescribimos el comando para forzar el modo interactivo 
+      # y obtener el código de reclamo, evitando el error SECRET_KEY.
+      command: ["stdbuf", "-o", "L", "/usr/bin/playit"]
+
+      # Esenciales para el modo interactivo
+      stdin_open: true
+      tty: true
+  
+      # Mantenemos el DNS fix como buena práctica
+      dns:
+        - 8.8.8.8
+        - 1.1.1.1
+
+      networks:
+        - minecraft_tunnel_network
+        
+      # El volumen para persistir la configuración
+      volumes:
+        - playit_config_data:/etc/playit
 # ----------------------------------------------------\
 # DEFINICIÓN DE VOLÚMENES Y REDES 
 # ----------------------------------------------------\
