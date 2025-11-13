@@ -38,30 +38,23 @@ services:
   # SERVICIO 2: PLAYIT.GG TUNNEL (CONFIGURACIÓN FINAL)
   # ----------------------------------------------------
   playit_agent:
-    # 1. CRÍTICO: Usar la imagen oficial estable
-    image: ghcr.io/playit-cloud/playit-agent:latest 
-    container_name: playit_minecraft_tunnel
-    restart: unless-stopped
-    
-    # 2. Comando para forzar el modo interactivo (esto pedirá el claim code)
-    command: ["/usr/bin/playit"] 
-    
-    # 3. Esenciales para ver y entrar el código de claim
-    stdin_open: true
-    tty: true
-
-    # 4. Buena práctica para evitar fallos de red
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
-
-    networks:
-      - minecraft_tunnel_network
+      # Usar la imagen oficial
+      image: ghcr.io/playit-cloud/playit-agent:latest 
+      container_name: playit_minecraft_tunnel
+      restart: unless-stopped
       
-    # 5. CRÍTICO: Volumen a la ruta correcta para esta imagen
-    volumes:
-      - playit_config_data:/etc/playit
-
+      # CRÍTICO: Aquí inyectas la clave de forma segura
+      environment:
+        # playit-agent busca específicamente la variable SECRET_KEY
+        - SECRET_KEY=${PLAYIT_SECRET_KEY} 
+        
+      # Configuración adicional de PlayIt.gg (tomada de tu última versión)
+      stdin_open: true
+      tty: true
+      networks:
+        - minecraft_tunnel_network
+      volumes:
+        - playit_config_data:/etc/playit
 # ----------------------------------------------------
 # DEFINICIÓN DE VOLÚMENES Y REDES 
 # ----------------------------------------------------
