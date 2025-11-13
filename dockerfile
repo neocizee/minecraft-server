@@ -31,5 +31,5 @@ RUN if [ "$SERVER_ENV" = "staging" ]; then \
       cp -r plugins.staging/. /server/plugins; \
     fi
 
-# Comando final de ejecución.
-CMD ["java", "-Xmx4G", "-Xms1G", "-jar", "paper.jar", "nogui"]
+# Comando final de ejecución. Quitamos -Xmx/-Xms si lo definimos en docker-compose
+CMD ["java", "-jar", "paper.jar", "nogui"]
