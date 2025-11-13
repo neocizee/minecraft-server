@@ -1,15 +1,24 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
-PLAYIT_BIN="/app/playit"
+PERSISTENT_DIR="/data"
+IMAGE_DIR="/server"
 
-if [ ! -f "$PLAYIT_BIN" ]; then
-    echo "PlayIt binary not found, downloading from Playit.cloud..."
-    curl -fL -o "$PLAYIT_BIN" https://playit.cloud/api/v1/agent/downloads/playit-linux-x86_64
-    chmod +x "$PLAYIT_BIN"
-    echo "Download complete."
+echo "Iniciando proceso de validación y arranque."
+
+# CRÍTICO: Copia/Reemplaza el paper.jar del contenedor al volumen en CADA INICIO (para actualizaciones)
+# Esto asegura que si reconstruyes la imagen con una nueva versión de Paper, se use el nuevo JAR.
+cp -f "${IMAGE_DIR}/paper.jar" "${PERSISTENT_DIR}/paper.jar"
+echo "paper.jar copiado/reemplazado en el volumen persistente (/data)."
+
+# Copia de archivos de configuración iniciales SÓLO si el mundo no existe
+# Esto evita sobrescribir server.properties, eula.txt o plugins personalizados.
+if [ ! -d "${PERSISTENT_DIR}/world" ]; then
+    echo "Archivos iniciales (eula.txt, server.properties, plugins) copiados a /data."
+    cp "${IMAGE_DIR}/server.properties" "${PERSISTENT_DIR}/"
+    cp "${IMAGE_DIR}/eula.txt" "${PERSISTENT_DIR}/"
+    cp -r "${IMAGE_DIR}/plugins" "${PERSISTENT_DIR}/"
 fi
 
-echo "Starting PlayIt agent. Looking for claim code..."
-# CRÍTICO: El uso de 'stdbuf -o L' fuerza el streaming de logs.
-exec stdbuf -o L "$PLAYIT_BIN"
+# Ejecuta el servidor Java como PID 1
+exec java $JAVA_OPTS $JAVA_OPTS_GC -jar "${PERSISTENT_DIR}/paper.jar" nogui
