@@ -27,7 +27,6 @@ COPY plugins /server/plugins
 
 # 3. Copia plugins de Staging SOLO si estamos en Staging (lógica condicional)
 RUN if [ "$SERVER_ENV" = "staging" ]; then \
-      mkdir -p /server/plugins.staging && \
       cp -r plugins.staging/. /server/plugins; \
     fi
 
