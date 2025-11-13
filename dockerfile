@@ -1,9 +1,10 @@
-FROM openjdk:17-jre-slim
+FROM alpine:3.18 
 
-# CRÍTICO: Instalar curl para una descarga robusta del JAR
-RUN apt-get update && \
-    apt-get install -y curl && \
-    rm -rf /var/lib/apt/lists/*
+RUN apk update && \
+    apk add --no-cache openjdk17-jre \
+                       curl \
+                       ca-certificates && \
+    rm -rf /var/cache/apk/*
 
 ARG MINECRAFT_VERSION="1.20.1"
 ARG PAPER_BUILD="latest"
