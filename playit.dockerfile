@@ -1,17 +1,21 @@
-# Usamos Alpine. Es rápido y estable.
+# playit.dockerfile
+# Usamos Alpine: pequeña, rápida y estable.
 FROM alpine:3.18
 
-# Instala solo las herramientas necesarias (curl para el script de descarga)
+# 1. Instala CURL y la utilidad stdbuf (para forzar logs)
+# Este paso se ejecuta en el build y usa la red del host, que es más estable.
 RUN apk update && \
     apk add --no-cache curl coreutils && \
     rm -rf /var/cache/apk/*
 
-# Copia el script de entrada que descargará y ejecutará el binario
-COPY playit-entrypoint.sh /usr/local/bin/playit-entrypoint.sh
-RUN chmod +x /usr/local/bin/playit-entrypoint.sh
+# 2. CRÍTICO: Descarga el binario playit.gg en el BUILD TIME
+# Esto soluciona de forma definitiva el error "Could not resolve host".
+RUN curl -fL -o /usr/local/bin/playit-agent https://playit.cloud/api/v1/agent/downloads/playit-linux-x86_64 && \
+    chmod +x /usr/local/bin/playit-agent
 
-# Directorio de trabajo: Aquí se mapeará el volumen playit_config_data
+# 3. Define un WORKDIR
+# /app es donde el volumen persistente mapeará, y PlayIt guarda su configuración en /app/.playit
 WORKDIR /app
 
-# El entrypoint se encargará de todo
-ENTRYPOINT ["/usr/local/bin/playit-entrypoint.sh"]
+# 4. El ENTRYPOINT directamente lanza el binario que ya existe en la imagen
+ENTRYPOINT ["stdbuf", "-o", "L", "/usr/local/bin/playit-agent"]
