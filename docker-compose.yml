@@ -52,9 +52,10 @@ volumes:
     name: ${WORLD_VOLUME_NAME}
     driver: local
 
-# Redes
+# Redes (Este stack crea la red si no existe)
 networks:
   default:
     driver: bridge
-  cloudflare_tunnel_network:
-    external: true
+  minecraft_tunnel_network: # La red que ahora crea este stack
+    name: minecraft_tunnel_network 
+    driver: bridge
