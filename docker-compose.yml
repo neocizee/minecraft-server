@@ -29,7 +29,7 @@ services:
       - minecraft_tunnel_network 
       
   # ----------------------------------------------------
-  # SERVICIO 2: PLAYIT.GG TUNNEL (USO DE IMAGEN OFICIAL)
+  # SERVICIO 2: PLAYIT.GG TUNNEL (FIX DE COMANDO)
   # ----------------------------------------------------
   playit_agent:
     image: playitdev/playit:latest # Usar imagen pre-construida
