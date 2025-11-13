@@ -9,11 +9,13 @@ services:
       dockerfile: dockerfile 
       args: 
         SERVER_ENV: ${SERVER_ENV:-prod} 
-        CACHE_BUST: ${BUILD_ID:-12}
+        CACHE_BUST: ${BUILD_ID:-13}
         
     container_name: ${CONTAINER_NAME:-mc-server}
     restart: unless-stopped
-    command: /usr/local/bin/entrypoint.sh 
+
+    entrypoint: /usr/local/bin/entrypoint.sh
+    command: java $JAVA_OPTS $JAVA_OPTS_GC -jar /data/paper.jar nogui
     
     deploy:
       resources:
@@ -34,33 +36,35 @@ services:
       - minecraft_tunnel_network 
       
   # ----------------------------------------------------
-  # SERVICIO 2: PLAYIT.GG TUNNEL (MODO CLAIM CODE/INTERACTIVO)
+  # SERVICIO 2: PLAYIT.GG TUNNEL (CONFIGURACIÓN FINAL)
   # ----------------------------------------------------
   playit_agent:
-    # 1. CRÍTICO: Usar la imagen oficial y estable
+    # CRÍTICO: Imagen oficial y estable (resuelve fallos de "pull access denied" y MalformedSecret)
     image: ghcr.io/playit-cloud/playit-agent:latest 
     container_name: playit_minecraft_tunnel
     restart: unless-stopped
     
-    # 2. CRÍTICO: Forzamos el modo interactivo con 'command' para que te dé el Claim Code
-    command: ["/usr/bin/playit"] 
+    # CRÍTICO: Inyecta la clave SECRETA como variable de entorno
+    environment:
+      # PlayIt.gg busca específicamente esta variable si el archivo no existe.
+      - SECRET_KEY=${PLAYIT_SECRET_KEY} 
     
-    # Mantenemos STDIN/TTY para ver el claim code en los logs
+    # Esenciales para obtener el código de reclamo la primera vez (si el volumen está vacío)
     stdin_open: true
     tty: true
 
-    # DNS fix como buena práctica
+    # DNS fix como buena práctica para estabilidad de red
     dns:
       - 8.8.8.8
       - 1.1.1.1
-  
+
     networks:
       - minecraft_tunnel_network
       
-    # 3. CRÍTICO: Volumen para persistir la configuración
+    # CRÍTICO: Volumen para persistir la configuración.
+    # La ruta para esta imagen oficial es /etc/playit
     volumes:
-      - playit_config_data:/etc/playit 
-
+      - playit_config_data:/etc/playit
 # ----------------------------------------------------
 # DEFINICIÓN DE VOLÚMENES Y REDES 
 # ----------------------------------------------------
