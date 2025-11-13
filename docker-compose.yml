@@ -1,79 +1,88 @@
 version: '3.8'
 services:
+  # ----------------------------------------------------
+  # SERVICIO 1: MINECRAFT SERVER (PAPERC)
+  # ----------------------------------------------------
   minecraft_server:
+    # Construye la imagen usando el Dockerfile en la raíz
     build: 
       context: . 
       args: 
-        SERVER_ENV: ${SERVER_ENV}
-        CACHE_BUST: ${BUILD_ID} # Cache Buster
+        SERVER_ENV: ${SERVER_ENV:-prod} # Usa 'prod' por defecto si no está definida
+        CACHE_BUST: ${BUILD_ID:-1} # Cambia BUILD_ID para forzar un build limpio
         
-    container_name: ${CONTAINER_NAME}
+    container_name: ${CONTAINER_NAME:-mc-server}
     restart: unless-stopped
 
-    # El comando es el script de entrada (entrypoint.sh)
+    # CRÍTICO: Ejecuta el script de inicialización
     command: /usr/local/bin/entrypoint.sh 
 
-    # Límites de recursos (Se mantienen)
+    # Límites de recursos (BUENA PRÁCTICA)
     deploy:
       resources:
         limits:
           cpus: '2.0'
-          memory: 4096m
+          memory: 4096m # Limita a 4GB
         reservations:
           cpus: '0.5'
           memory: 1G
     
-    # Volumen: Mapea a /data donde entrypoint.sh copia/ejecuta los archivos
+    # Volumen: Mapea al directorio /data (usado por entrypoint.sh)
     volumes:
       - minecraft_data:/data 
     
+    # Variables de Entorno (Usadas por entrypoint.sh y el servidor)
     environment:
-      JAVA_OPTS: "-Xmx${MINECRAFT_MEMORY_LIMIT} -Xms1G" # RAM
+      # RAM: Usa la variable de Portainer (ej: 3072m para 3GB)
+      JAVA_OPTS: "-Xmx${MINECRAFT_MEMORY_LIMIT:-3G} -Xms1G" 
       EULA: "TRUE"
-      BUILD_ID: "6" # <-- CAMBIA ESTE VALOR CADA VEZ QUE HAGAS UN BUILD
+      # Flags de Optimización G1GC para mejor rendimiento de Java en MC
       JAVA_OPTS_GC: "-XX:+AlwaysPreTouch -XX:+DisableExplicitGC -XX:+ParallelRefProcEnabled -XX:+PerfDisableSharedMem -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1HeapRegionSize=8M -XX:G1HeapWastePercent=5 -XX:G1MaxNewSizePercent=40 -XX:G1MixedGCCountTarget=4 -XX:G1NewSizePercent=30 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:G1ReservePercent=20 -XX:InitiatingHeapOccupancyPercent=15 -XX:MaxGCPauseMillis=200 -XX:MaxTenuringThreshold=1 -XX:SurvivorRatio=32"
           
     expose:
-      - "25565" # Puerto interno de Minecraft
+      - "25565" # Puerto interno de Minecraft (no público)
 
     networks:
       - default 
-      - minecraft_tunnel_network 
+      - minecraft_tunnel_network # Se comunica con el agente playit
       
   # ----------------------------------------------------
-  # NUEVO SERVICIO: PLAYIT.GG TUNNEL
+  # SERVICIO 2: PLAYIT.GG TUNNEL (SIN BUILD)
   # ----------------------------------------------------
   playit_agent:
-        # CRÍTICO: Usamos una imagen oficial o de la comunidad que ya funciona.
-        # Esto elimina la necesidad de tu playit.dockerfile y la lentitud del build.
-        image: playitdev/playit:latest
-        container_name: playit_minecraft_tunnel
-        restart: unless-stopped
+      # CRÍTICO: Usamos la imagen pre-construida para estabilidad y rapidez
+      image: playitdev/playit:latest
+      container_name: playit_minecraft_tunnel
+      restart: unless-stopped
+      
+      # Esenciales para obtener el código de claim
+      stdin_open: true
+      tty: true
+  
+      # Conectamos a la red privada
+      networks:
+        - minecraft_tunnel_network
         
-        # <<<<<< HEMOS ELIMINADO LA SECCIÓN 'build:' >>>>>>>
-        
-        # CRÍTICO: Mantenemos el STDIN abierto y TTY para capturar el código de claim
-        stdin_open: true
-        tty: true
-    
-        # CRÍTICO: Conectamos a la misma red para que pueda encontrar el servidor
-        networks:
-          - minecraft_tunnel_network
-          
-        # Volumen para persistir la configuración (la clave de playit.gg)
-        volumes:
-          # El path cambia a /etc/playit en esta imagen en lugar de /root/.playit
-          - playit_config_data:/etc/playit
+      # Volumen para persistir la configuración (token y túneles)
+      volumes:
+        - playit_config_data:/etc/playit # Path correcto para playitdev/playit:latest
 
-# Definición de Redes y Volúmenes (al final del archivo)
+# ----------------------------------------------------
+# DEFINICIÓN DE VOLÚMENES Y REDES (CRÍTICO)
+# ----------------------------------------------------
 volumes:
-  # ... (Volumen de minecraft_data) ...
+  # Volumen del servidor (Mundo, logs, plugins)
+  minecraft_data:
+    name: ${WORLD_VOLUME_NAME:-mc-world-data}
+    driver: local
+  # Volumen del agente (Configuración del túnel)
   playit_config_data:
     name: playit_config
     driver: local
 
 networks:
-  # ... (default network) ...
+  default:
+    driver: bridge
   minecraft_tunnel_network: 
     name: minecraft_tunnel_network 
     driver: bridge
