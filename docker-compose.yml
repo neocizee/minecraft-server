@@ -14,7 +14,6 @@ services:
     container_name: ${CONTAINER_NAME:-mc-server}
     restart: unless-stopped
 
-    entrypoint: /usr/local/bin/entrypoint.sh
     command: ["/bin/bash", "/usr/local/bin/entrypoint.sh"]
     
     deploy:
