@@ -30,32 +30,36 @@ services:
       - minecraft_tunnel_network 
       
   # ----------------------------------------------------
-  # SERVICIO 2: PLAYIT.GG TUNNEL (USANDO IMAGEN OFICIAL)
+  # SERVICIO 2: PLAYIT.GG TUNNEL (CONFIGURACIÓN ESTABLE)
   # ----------------------------------------------------
   playit_agent:
-      # CRÍTICO: Usa la imagen oficial, más estable y probada.
-      image: ghcr.io/playit-cloud/playit-agent:latest 
+      image: playit-agent-build:latest
       container_name: playit_minecraft_tunnel
       restart: unless-stopped
       
-      # ELIMINAMOS LA SECCIÓN 'build:' (ya no es necesaria)
+      # Usar tu build local que es estable en tu entorno
+      build:
+        context: .
+        dockerfile: playit.dockerfile 
       
-      # Forzar DNS (solución al 'Could not resolve host')
+      # CRÍTICO: Forzar DNS públicos para estabilidad de red
       dns:
         - 8.8.8.8
         - 1.1.1.1
       
-      # Mantenemos STDIN/TTY para ver el claim code
-      stdin_open: true 
+      # Usar tu script de entrada que gestiona la descarga y ejecución
+      entrypoint: /usr/local/bin/playit-entrypoint.sh
+      
+      # Esenciales para obtener el código de claim
+      stdin_open: true
       tty: true
       
       networks:
         - minecraft_tunnel_network
         
-      # CRÍTICO: La imagen oficial usa /etc/playit para persistir su configuración
+      # Mapea a /app, el WORKDIR donde playit guarda la config.toml
       volumes:
-        - playit_config_data:/etc/playit 
-        
+        - playit_config_data:/app
 # ----------------------------------------------------
 # DEFINICIÓN DE VOLÚMENES Y REDES 
 # ----------------------------------------------------
