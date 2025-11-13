@@ -28,37 +28,41 @@ services:
       - default 
       - minecraft_tunnel_network 
       
-  # ----------------------------------------------------
-  # SERVICIO 2: PLAYIT.GG TUNNEL (CONFIGURACIÓN FINAL)
+# ----------------------------------------------------
+  # SERVICIO 2: PLAYIT.GG TUNNEL (CONFIGURACIÓN ESTABLE)
   # ----------------------------------------------------
   playit_agent:
-    image: playit-agent-build:latest
+    # CRÍTICO: Usamos la imagen oficial de GitHub Container Registry (GHCR.IO).
+    # Esto resuelve tu error de "no such file or directory" y otros fallos de build.
+    image: ghcr.io/playit-cloud/playit-agent:latest 
     container_name: playit_minecraft_tunnel
     restart: unless-stopped
     
-    # Usar tu build local
-    build:
-      context: .
-      dockerfile: playit.dockerfile 
+    # <<<<<< ELIMINA TODA LA SECCIÓN 'build:' si existe >>>>>>
+    # build:
+    #   context: .
+    #   dockerfile: playit.dockerfile 
     
-    # Forzar DNS públicos (Buena práctica para evitar fallos de red)
+    # CRÍTICO: Sobrescribimos el comando para forzar el modo interactivo.
+    # Esto debería evitar el error MalformedSecret si el volumen está vacío.
+    command: ["/usr/bin/playit"] 
+
+    # Esenciales para obtener el código de reclamo en los logs
+    stdin_open: true
+    tty: true
+
+    # DNS fix como buena práctica para estabilidad de red
     dns:
       - 8.8.8.8
       - 1.1.1.1
-    
-    # Usar tu entrypoint para gestionar la descarga del binario
-    entrypoint: /usr/local/bin/playit-entrypoint.sh
-    
-    # Esenciales para obtener el código de claim
-    stdin_open: true
-    tty: true
-    
+
     networks:
       - minecraft_tunnel_network
       
-    # CRÍTICO: Volumen que mapea a /app (donde el agente guarda la configuración)
+    # CRÍTICO: Volumen para persistir la configuración.
+    # La ruta para esta imagen oficial es /etc/playit
     volumes:
-      - playit_config_data:/app
+      - playit_config_data:/etc/playit
 
       
 # ----------------------------------------------------\
