@@ -14,9 +14,6 @@ RUN echo "deb [signed-by=/etc/apt/trusted.gpg.d/playit.gpg] https://playit-cloud
 # 3. Actualiza e instala playit
 RUN apt-get update && apt-get install -y playit
 
-# Puerto TCP predeterminado de Minecraft
-ENV MINECRAFT_PORT 25565
-
-# El comando de inicio
-# NOTA: El primer inicio te pedirá el código de claim.
-CMD ["playit", "--local-ip", "minecraft_server", "tcp", "25565"]
+# 4. CRÍTICO: Comando de inicio simplificado.
+# El agente se iniciará y te dará el código de claim.
+CMD ["playit"]
