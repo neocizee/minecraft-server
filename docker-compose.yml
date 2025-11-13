@@ -4,12 +4,11 @@ services:
   # SERVICIO 1: MINECRAFT SERVER (Tu configuración estable)
   # ----------------------------------------------------
   minecraft_server:
-    # Asegúrate que el BUILD_ID se actualice para forzar el build de tu servidor de MC.
     build: 
       context: . 
       args: 
         SERVER_ENV: ${SERVER_ENV:-prod} 
-        CACHE_BUST: ${BUILD_ID:-7} # <<-- CAMBIA este número a 7, 8, etc., si haces cambios en tu Dockerfile
+        CACHE_BUST: ${BUILD_ID:-7} # <<-- CAMBIA este número (8, 9, etc.) si haces cambios en tu Dockerfile
         
     container_name: ${CONTAINER_NAME:-mc-server}
     restart: unless-stopped
@@ -40,22 +39,21 @@ services:
       - minecraft_tunnel_network 
       
   # ----------------------------------------------------
-  # SERVICIO 2: PLAYIT.GG TUNNEL (IMAGEN OFICIAL - SIN BUILD)
+  # SERVICIO 2: PLAYIT.GG TUNNEL (Imagen GHCR.IO - Alternativa)
   # ----------------------------------------------------
   playit_agent:
-      # CRÍTICO: Usamos la imagen oficial de PlayIt.gg. Esto elimina el playit.dockerfile.
-      image: playitdev/playit:latest
+      # CRÍTICO: Usamos la imagen estable de GHCR.io para evitar el error de acceso denegado.
+      image: ghcr.io/playit-cloud/playit:latest
       container_name: playit_minecraft_tunnel
       restart: unless-stopped
       
-      # Esenciales para obtener el código de claim
       stdin_open: true
       tty: true
   
       networks:
         - minecraft_tunnel_network
         
-      # Volumen para persistir la configuración (Path compatible con la imagen oficial)
+      # Volumen para persistir la configuración (Playit.gg usa /root/.playit)
       volumes:
         - playit_config_data:/root/.playit 
 
