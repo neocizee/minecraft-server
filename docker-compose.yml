@@ -29,36 +29,32 @@ services:
       - minecraft_tunnel_network 
       
   # ----------------------------------------------------
-  # SERVICIO 2: PLAYIT.GG TUNNEL (CONFIGURACIÓN ESTABLE)
+  # SERVICIO 2: PLAYIT.GG TUNNEL (CONFIGURACIÓN FINAL)
   # ----------------------------------------------------
   playit_agent:
-    image: playit-agent-build:latest
+    # CRÍTICO: Imagen oficial y estable (resuelve fallos de "pull access denied")
+    image: ghcr.io/playit-cloud/playit-agent:latest
     container_name: playit_minecraft_tunnel
     restart: unless-stopped
     
-    # 1. Usar tu build local (Dockerfile y script que descarga el binario)
-    build:
-      context: .
-      dockerfile: playit.dockerfile 
+    # CRÍTICO: Sobrescribimos el comando para obtener el claim code (resuelve MalformedSecret si el volumen está vacío)
+    command: ["/usr/bin/playit"] # Solo el binario es suficiente en esta imagen
     
-    # 2. CRÍTICO: Forzar DNS públicos para evitar inestabilidad en la descarga
+    # Mantenemos STDIN/TTY para el código de claim
+    stdin_open: true
+    tty: true
+
+    # DNS fix como buena práctica
     dns:
       - 8.8.8.8
       - 1.1.1.1
-    
-    # 3. CRÍTICO: Usar el script de entrada (playit-entrypoint.sh)
-    entrypoint: /usr/local/bin/playit-entrypoint.sh
-    
-    # Esenciales para el claim code
-    stdin_open: true
-    tty: true
-    
+
     networks:
       - minecraft_tunnel_network
       
-    # 4. Volumen que mapea a /app (donde el script guarda el binario y playit guarda la config)
+    # Volumen para persistir la configuración
     volumes:
-      - playit_config_data:/app
+      - playit_config_data:/etc/playit # Ruta correcta para esta imagen
 
       
 # ----------------------------------------------------\
