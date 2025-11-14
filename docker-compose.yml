@@ -36,7 +36,9 @@ services:
   # SERVICIO 2: PLAYIT.GG TUNNEL
   # ----------------------------------------------------
   playit_agent:
-    image: ghcr.io/playit-cloud/playit-agent:latest 
+    build:
+      context: .
+      dockerfile: playit.dockerfile
     container_name: playit_minecraft_tunnel
     restart: unless-stopped
     
@@ -47,8 +49,7 @@ services:
       - minecraft_tunnel_network
       
     volumes:
-      # Ruta correcta para la imagen oficial
-      - playit_config_data:/root/.playit
+      - playit_config_data:/root
     
     dns:
       - 8.8.8.8
