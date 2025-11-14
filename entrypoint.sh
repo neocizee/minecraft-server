@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 PERSISTENT_DIR="/data"
 IMAGE_DIR="/server"
