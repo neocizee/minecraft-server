@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   # ----------------------------------------------------
-  # SERVICIO 1: MINECRAFT SERVER (Tu configuración estable)
+  # SERVICIO 1: MINECRAFT SERVER
   # ----------------------------------------------------
   minecraft_server:
     build: 
@@ -14,8 +14,6 @@ services:
     container_name: ${CONTAINER_NAME:-mc-server}
     restart: unless-stopped
 
-    command: ["/bin/bash", "/usr/local/bin/entrypoint.sh"]
-    
     deploy:
       resources:
         limits: { cpus: '2.0', memory: 4096m }
@@ -35,7 +33,7 @@ services:
       - minecraft_tunnel_network 
       
   # ----------------------------------------------------
-  # SERVICIO 2: PLAYIT.GG TUNNEL (CONFIGURACIÓN FINAL)
+  # SERVICIO 2: PLAYIT.GG TUNNEL
   # ----------------------------------------------------
   playit_agent:
     image: ghcr.io/playit-cloud/playit-agent:latest 
@@ -49,11 +47,8 @@ services:
       - minecraft_tunnel_network
       
     volumes:
-      # CRÍTICO: Ruta correcta para persistir configuración
+      # Ruta correcta para la imagen oficial
       - playit_config_data:/root/.playit
-      
-    # Comando correcto para primera ejecución
-    command: [""]
     
     dns:
       - 8.8.8.8
@@ -61,7 +56,6 @@ services:
     
     depends_on:
       - minecraft_server
-
 
 # ----------------------------------------------------
 # DEFINICIÓN DE VOLÚMENES Y REDES 
