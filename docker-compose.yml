@@ -38,28 +38,31 @@ services:
   # SERVICIO 2: PLAYIT.GG TUNNEL (CONFIGURACIÓN FINAL)
   # ----------------------------------------------------
   playit_agent:
-    # CRÍTICO: Usar la imagen oficial para máxima estabilidad
     image: ghcr.io/playit-cloud/playit-agent:latest 
     container_name: playit_minecraft_tunnel
     restart: unless-stopped
     
-    # ELIMINAR LA SECCIÓN 'build:' (si usaba una imagen local)
-    
-    # Esenciales para el claim code/logs
     stdin_open: true
     tty: true
 
     networks:
       - minecraft_tunnel_network
       
-    # CRÍTICO: Volumen para persistir la configuración (la ruta correcta en la imagen oficial es /etc/playit)
     volumes:
-      - playit_config_data:/etc/playit
+      # CRÍTICO: Ruta correcta para persistir configuración
+      - playit_config_data:/root/.playit
       
-    # Opcional: Recomendado si su red local tiene problemas de DNS
+    # Comando correcto para primera ejecución
+    command: [""]
+    
     dns:
       - 8.8.8.8
       - 1.1.1.1
+    
+    depends_on:
+      - minecraft_server
+
+
 # ----------------------------------------------------
 # DEFINICIÓN DE VOLÚMENES Y REDES 
 # ----------------------------------------------------
