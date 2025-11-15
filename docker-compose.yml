@@ -49,7 +49,7 @@ services:
       - minecraft_tunnel_network
       
     volumes:
-      - playit_config_data:/root
+      - playit_config_data:/etc/playit
     
     dns:
       - 8.8.8.8
