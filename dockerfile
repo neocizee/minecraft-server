@@ -9,7 +9,7 @@ RUN apk update && apk add --no-cache curl ca-certificates bash && rm -rf /var/ca
 WORKDIR /server
 
 # Descarga el JAR de PaperMC
-RUN curl -fL -o paper.jar "https://api.papermc.io/v2/projects/paper/versions/1.20.1/builds/196/downloads/paper-1.20.1-196.jar"
+RUN curl -fL -o paper.jar "https://api.papermc.io/v2/projects/paper/versions/1.21.5/builds/114/downloads/paper-1.21.5-114.jar"
 
 # Configuración inicial
 RUN echo "eula=true" > eula.txt
