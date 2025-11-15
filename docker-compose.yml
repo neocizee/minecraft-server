@@ -65,7 +65,7 @@ services:
 # ----------------------------------------------------
 volumes:
   minecraft_data:
-    name: ${WORLD_VOLUME_NAME:-mc-world-data}
+    name: ${WORLD_VOLUME_NAME:-mc_prod_server}
     driver: local
   playit_config_data:
     name: ${PLAYIT_VOLUME_NAME:-playit-config-data}
