@@ -1,6 +1,8 @@
 # ETAPA 1: BUILDER
 # Usamos eclipse-temurin:17-jre-alpine (ligero y con Java 17)
-FROM eclipse-temurin:17-jre-alpine AS builder
+#FROM eclipse-temurin:17-jre-alpine AS builder
+# Version 21 de java para soportar versiones mas nuevas de minecraft
+FROM eclipse-temurin:21-jre-alpine AS builder
 
 # Instalar dependencias necesarias (curl para descargar, bash para el script)
 RUN apk update && apk add --no-cache curl ca-certificates bash && rm -rf /var/cache/apk/*
@@ -24,7 +26,8 @@ COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # ETAPA 2: FINAL (Imagen de ejecución mínima de producción)
-FROM eclipse-temurin:17-jre-alpine
+#FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:21-jre-alpine
 
 # WORKDIR final (donde el script busca los archivos antes de copiarlos al volumen /data)
 WORKDIR /server
