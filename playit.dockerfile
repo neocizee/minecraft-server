@@ -1,20 +1,17 @@
-# playit.dockerfile
-# Usamos Alpine: pequeña, rápida y estable.
-FROM alpine:3.18
 
-# 1. Instala CURL y la utilidad stdbuf (para forzar logs)
-RUN apk update && \
-    apk add --no-cache curl coreutils && \
-    rm -rf /var/cache/apk/*
+# Imagen base Alpine (ligera y estable)
+FROM alpine:3.19
 
-# 2. CRÍTICO: Descarga el binario playit.gg en el BUILD TIME
-# Esto soluciona de forma definitiva el error "Could not resolve host"
-RUN curl -fL -o /usr/local/bin/playit-agent https://playit.cloud/api/v1/agent/downloads/playit-linux-x86_64 && \
-    chmod +x /usr/local/bin/playit-agent
+# Instalar dependencias mínimas
+RUN apk add --no-cache curl ca-certificates
 
-# 3. Define un WORKDIR
-# /app es donde el volumen persistente mapeará, y PlayIt guarda su configuración
-WORKDIR /app
+# Descargar binario oficial desde GitHub releases (versión verificada)
+RUN curl -SL https://github.com/playit-cloud/playit-agent/releases/download/v0.16.0/playit-linux-amd64 \
+    -o /usr/local/bin/playit && \
+    chmod +x /usr/local/bin/playit
 
-# 4. El ENTRYPOINT directamente lanza el binario. stdbuf -o L fuerza el streaming de logs.
-ENTRYPOINT ["stdbuf", "-o", "L", "/usr/local/bin/playit-agent"]
+# Directorio de trabajo donde se guardará la configuración
+WORKDIR /etc/playit
+
+# Ejecutar el agente directamente
+ENTRYPOINT ["/usr/local/bin/playit"]
