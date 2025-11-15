@@ -41,6 +41,7 @@ if [ ! -f "${PERSISTENT_DIR}/spigot.yml" ]; then
         # Excluir archivos que ya manejamos (paper.jar, eula.txt, server.properties, plugins)
         if [ "$item" != "paper.jar" ] && [ "$item" != "eula.txt" ] && [ "$item" != "server.properties" ] && [ "$item" != "plugins" ]; then
             cp -r -n "${IMAGE_DIR}/$item" "${PERSISTENT_DIR}/"
+            echo "${IMAGE_DIR}/$item copiado a ${PERSISTENT_DIR}/"
         fi
     done
     
