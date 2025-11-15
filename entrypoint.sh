@@ -51,6 +51,6 @@ fi
 # =========================================================================
 # 3. Ejecución del Servidor
 # =========================================================================
-
+cd "${PERSISTENT_DIR}"
 # Ejecuta el servidor Java como PID 1
 exec java $JAVA_OPTS $JAVA_OPTS_GC -jar "${PERSISTENT_DIR}/paper.jar" nogui
