@@ -1,5 +1,5 @@
 # Server Basics
-motd=Main Production Minecraft Server test
+motd=Minecraft Server test
 max-players=15
 server-port=25565
 
@@ -19,7 +19,7 @@ generate-structures=true
 # Security & Users
 white-list=false
 enforce-whitelist=false
-online-mode=false
+online-mode=true
 
 # Advanced
 rcon.port=25575
