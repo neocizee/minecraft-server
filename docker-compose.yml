@@ -42,6 +42,7 @@ services:
     container_name: playit_minecraft_tunnel
     restart: unless-stopped
     
+    # CRÍTICO: stdin y tty para modo interactivo (genera claim URL)
     stdin_open: true
     tty: true
 
@@ -51,6 +52,7 @@ services:
     volumes:
       - playit_config_data:/etc/playit
     
+    # DNS alternativos para evitar problemas de resolución
     dns:
       - 8.8.8.8
       - 1.1.1.1
