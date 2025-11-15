@@ -1,10 +1,7 @@
-# Minecraft server properties - Staging Environment
-# For testing new plugins, configs, and features.
-
 # Server Basics
 motd=Main Production Minecraft Server
 max-players=10
-server-port=25566
+server-port=25565
 
 # Gameplay
 gamemode=creative
@@ -15,7 +12,7 @@ enable-command-block=true
 
 # World
 level-seed=
-level-name=world_staging
+level-name=world
 allow-nether=true
 generate-structures=true
 
@@ -25,7 +22,7 @@ enforce-whitelist=false
 online-mode=true
 
 # Advanced
-rcon.port=25576
-query.port=25566
+rcon.port=25575
+query.port=25565
 enable-query=true
 enable-rcon=false
