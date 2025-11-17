@@ -19,7 +19,7 @@ generate-structures=true
 # Security & Users
 white-list=false
 enforce-whitelist=false
-online-mode=true
+online-mode=false
 
 # Advanced
 rcon.port=25575
