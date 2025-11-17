@@ -49,8 +49,18 @@ if [ ! -f "${PERSISTENT_DIR}/spigot.yml" ]; then
 fi
 
 # =========================================================================
+# 2.5. Forzar Configuración de Proxy (Previene la Reversión de PaperMC)
+# =========================================================================
+
+PAPER_GLOBAL_YML="${PERSISTENT_DIR}/config/paper-global.yml"
+
+if [ -f "$PAPER_GLOBAL_YML" ]; then
+    sed -i 's/proxy-protocol: false/proxy-protocol: true/' "$PAPER_GLOBAL_YML"
+fi
+
+# =========================================================================
 # 3. Ejecución del Servidor
 # =========================================================================
 cd "${PERSISTENT_DIR}"
 # Ejecuta el servidor Java como PID 1
-exec java $JAVA_OPTS $JAVA_OPTS_GC -jar "${PERSISTENT_DIR}/paper.jar" nogui
+exec java ${JAVA_OPTS} ${JAVA_OPTS_GC} -jar ${PERSISTENT_DIR}/paper.jar --nogui

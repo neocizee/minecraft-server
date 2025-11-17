@@ -25,24 +25,23 @@ RUN if [ "$SERVER_ENV" = "staging" ]; then cp -r plugins.staging/. /server/plugi
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-RUN addgroup -g 1000 minecraftserver1 && \
-    adduser -u 1000 -G minecraftserver1 -s /bin/sh -D minecraftserver1
-
-RUN chown -R minecraftserver1:minecraftserver1 /server /usr/local/bin/entrypoint.sh
-
 # ETAPA 2: FINAL (Imagen de ejecución mínima de producción)
 #FROM eclipse-temurin:17-jre-alpine
 FROM eclipse-temurin:21-jre-alpine
 
-
-# WORKDIR final (donde el script busca los archivos antes de copiarlos al volumen /data)
 WORKDIR /server
 
-USER minecraftserver1
+RUN addgroup -g 1000 minecraftserver1 && \
+    adduser -u 1000 -G minecraftserver1 -s /bin/sh -D minecraftserver1
 
-# Copia solo los archivos necesarios de la etapa de build
 COPY --from=builder /server /server
 COPY --from=builder /usr/local/bin/entrypoint.sh /usr/local/bin/entrypoint.sh
 
-EXPOSE 25565
+RUN mkdir -p /data && \
+    chown -R minecraftserver1:minecraftserver1 /data /server /usr/local/bin/entrypoint.sh
+
+USER minecraftserver1
+WORKDIR /data
+
+EXPOSE 35114
 CMD ["/usr/local/bin/entrypoint.sh"]

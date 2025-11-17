@@ -4,13 +4,13 @@ services:
   # SERVICIO 1: MINECRAFT SERVER
   # ----------------------------------------------------
   minecraft_server:
-    build: 
-      context: . 
-      dockerfile: dockerfile 
-      args: 
-        SERVER_ENV: ${SERVER_ENV:-main} 
+    build:
+      context: .
+      dockerfile: dockerfile
+      args:
+        SERVER_ENV: ${SERVER_ENV:-main}
         CACHE_BUST: ${BUILD_ID:-13}
-        
+
     container_name: ${CONTAINER_NAME:-mc-server}
     restart: unless-stopped
 
@@ -18,47 +18,50 @@ services:
       resources:
         limits: { cpus: '2.0', memory: 4096m }
         reservations: { cpus: '0.5', memory: 1G }
-        
+
     volumes:
       - minecraft_data:/data
-      
+
     environment:
-      JAVA_OPTS: "-Xmx${MINECRAFT_MEMORY_LIMIT:-3G} -Xms1G" 
+      JAVA_OPTS: "-Djava.net.preferIPv4Stack=true -Xmx${MINECRAFT_MEMORY_LIMIT:-3G} -Xms1G"
       EULA: "TRUE"
       JAVA_OPTS_GC: "-XX:+AlwaysPreTouch -XX:+DisableExplicitGC -XX:+ParallelRefProcEnabled -XX:+PerfDisableSharedMem -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1HeapRegionSize=8M -XX:G1HeapWastePercent=5 -XX:G1MaxNewSizePercent=40 -XX:G1MixedGCCountTarget=4 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1NewSizePercent=30 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:G1ReservePercent=20 -XX:InitiatingHeapOccupancyPercent=15 -XX:MaxGCPauseMillis=200 -XX:MaxTenuringThreshold=1 -XX:SurvivorRatio=32"
 
     user: "minecraftserver1"
 
-    expose: [ "25565" ] 
+    ports:
+      - "35114:35114"
+
     networks:
-      - default 
-      - minecraft_tunnel_network 
-      
+      default:
+      minecraft_tunnel_network:
+        ipv4_address: 172.20.0.5
+
   # ----------------------------------------------------
   # SERVICIO 2: PLAYIT.GG TUNNEL
   # ----------------------------------------------------
   playit_agent:
-    build:
-      context: .
-      dockerfile: playit.dockerfile
+    image: ghcr.io/playit-cloud/playit-agent:latest
     container_name: playit_minecraft_tunnel
     restart: unless-stopped
-    
+    environment:
+      - SECRET_KEY=${PLAYIT_SECRET}
+
     # CRÍTICO: stdin y tty para modo interactivo (genera claim URL)
     stdin_open: true
     tty: true
 
     networks:
       - minecraft_tunnel_network
-      
+
     volumes:
       - playit_config_data:/etc/playit
-    
+
     # DNS alternativos para evitar problemas de resolución
     dns:
       - 8.8.8.8
       - 1.1.1.1
-    
+
     depends_on:
       - minecraft_server
 
@@ -76,3 +79,9 @@ volumes:
 networks:
   minecraft_tunnel_network:
     name: minecraft_tunnel_network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+    driver_opts:
+      com.docker.network.driver.mtu: 1400

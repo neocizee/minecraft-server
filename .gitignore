@@ -2,27 +2,10 @@
 *.log
 logs/
 
-# World data
-world/
-world_nether/
-world_the_end/
-
-# Server-specific files
-usercache.json
-usernamecache.json
-banned-ips.json
-banned-players.json
-ops.json
-white-list.json
-eula.txt
-
-# Crash reports
-crash-reports/
-
-
 # Temporary or build files
 *.tmp
 *.jar
 *.zip
 *.rar
 *.txt
+minecraft-server.code-workspace
