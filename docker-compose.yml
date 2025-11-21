@@ -14,6 +14,9 @@ services:
     container_name: ${CONTAINER_NAME:-mc-server}
     restart: unless-stopped
 
+    stdin_open: true # Permite enviar comandos (Standard Input Open)
+    tty: true # Simula una terminal real (Teletype)
+
     deploy:
       resources:
         limits: { cpus: '2.0', memory: 4096m }
@@ -46,10 +49,6 @@ services:
     restart: unless-stopped
     environment:
       - SECRET_KEY=${PLAYIT_SECRET}
-
-    # CRÍTICO: stdin y tty para modo interactivo (genera claim URL)
-    stdin_open: true
-    tty: true
 
     networks:
       - minecraft_tunnel_network

@@ -4,8 +4,11 @@ logs/
 
 # Temporary or build files
 *.tmp
-*.jar
 *.zip
 *.rar
 *.txt
 minecraft-server.code-workspace
+
+# Temporalmente hasta que este archivo se vuelva relevante
+README.md
+.vscode/*

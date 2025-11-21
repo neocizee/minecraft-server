@@ -1,29 +1,55 @@
 # Server Basics
-motd=Minecraft Server test
-max-players=15
+motd=                        \u00A7l♛\u00A7r\n                     \u00A7l☯⛏⚔️🗡️
+max-players=20
 server-port=35114
 server-ip=0.0.0.0
 
+# Performance & Optimization (Critical for 20 players/limited specs)
+view-distance=6
+simulation-distance=4
+network-compression-threshold=256
+max-tick-time=60000
+entity-broadcast-range-percentage=100
+use-native-transport=true
+sync-chunk-writes=true
+enable-jmx-monitoring=false
+enable-status=true
+
 # Gameplay
 gamemode=survival
-difficulty=hard
-pvp=false
-allow-flight=true
+difficulty=normal
+pvp=true
+allow-flight=false
 enable-command-block=true
+hardcore=false
+force-gamemode=false
 
-# World
-level-seed=
+# World Generation & Limits
 level-name=world
+level-type=default
 allow-nether=true
 generate-structures=true
+max-world-size=29999984
+max-build-height=320
+
+# Spawning Limits (Helps with performance)
+spawn-protection=0
+spawn-animals=true
+spawn-monsters=true
+spawn-npcs=true
+allow-end=true
 
 # Security & Users
 white-list=false
 enforce-whitelist=false
 online-mode=false
-
-# Advanced
-rcon.port=25575
+prevent-proxy-connections=false
+hide-online-players=false
 query.port=35114
 enable-query=true
-enable-rcon=false
+broadcast-console-to-ops=true
+
+# Resource Pack
+resource-pack=
+resource-pack-sha1=
+require-resource-pack=false
