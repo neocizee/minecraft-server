@@ -8,7 +8,4 @@ logs/
 *.rar
 *.txt
 minecraft-server.code-workspace
-
-# Temporalmente hasta que este archivo se vuelva relevante
-README.md
 .vscode/*
